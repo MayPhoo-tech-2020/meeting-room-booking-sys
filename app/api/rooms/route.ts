@@ -1,29 +1,29 @@
-import { PrismaClient } from "@prisma/client";
+import { getAll, create } from "@/lib/crud";
 
-const prisma = new PrismaClient();
 
 export async function GET() {
-  try {
-    const rooms = await prisma.room.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
 
-    return Response.json({
-      success: true,
-      count: rooms.length,
-      data: rooms,
-    });
-  } catch (error) {
-    return Response.json(
-      {
-        success: false,
-        error: String(error),
-      },
-      {
-        status: 500,
-      }
-    );
-  }
+  const rooms = await getAll(
+    "room"
+  );
+
+  return Response.json({
+    success:true,
+    data:rooms
+  });
+
+}
+
+
+export async function POST(request:Request){
+
+ const body = await request.json();
+
+ const room = await create(
+    "room",
+    body
+ );
+
+ return Response.json(room);
+
 }
