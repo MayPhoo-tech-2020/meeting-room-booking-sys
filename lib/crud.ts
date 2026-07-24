@@ -1,66 +1,40 @@
-import { prisma } from "./prisma";
+export function createCrud(model: any) {
 
-export async function getAll(
-  model: keyof typeof prisma,
-  options?: any
-) {
-  const dbModel = prisma[model] as any;
+  return {
 
-  return dbModel.findMany(options);
-}
-
-
-export async function getById(
-  model: keyof typeof prisma,
-  id: string
-) {
-  const dbModel = prisma[model] as any;
-
-  return dbModel.findUnique({
-    where: {
-      id,
+    findMany: () => {
+      return model.findMany();
     },
-  });
-}
 
 
-export async function create(
-  model: keyof typeof prisma,
-  data: any
-) {
-  const dbModel = prisma[model] as any;
-
-  return dbModel.create({
-    data,
-  });
-}
-
-
-export async function update(
-  model: keyof typeof prisma,
-  id: string,
-  data: any
-) {
-  const dbModel = prisma[model] as any;
-
-  return dbModel.update({
-    where: {
-      id,
+    findUnique: (id: string) => {
+      return model.findUnique({
+        where: { id }
+      });
     },
-    data,
-  });
-}
 
 
-export async function remove(
-  model: keyof typeof prisma,
-  id: string
-) {
-  const dbModel = prisma[model] as any;
-
-  return dbModel.delete({
-    where: {
-      id,
+    create: (data: any) => {
+      return model.create({
+        data
+      });
     },
-  });
+
+
+    update: (id: string, data: any) => {
+      return model.update({
+        where: { id },
+        data
+      });
+    },
+
+
+    delete: (id: string) => {
+      return model.delete({
+        where: { id }
+      });
+    }
+
+  };
+
 }

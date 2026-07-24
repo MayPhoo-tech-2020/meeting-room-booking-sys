@@ -1,29 +1,37 @@
-import { getAll, create } from "@/lib/crud";
+import { prisma } from "@/lib/prisma";
+import { createCrud } from "@/lib/crud";
 
 
-export async function GET() {
+const rooms = createCrud(prisma.room);
 
-  const rooms = await getAll(
-    "room"
-  );
 
-  return Response.json({
-    success:true,
-    data:rooms
-  });
+
+export async function GET(){
+
+ const data = await rooms.findMany();
+
+
+ return Response.json({
+   success:true,
+   count:data.length,
+   data
+ });
 
 }
 
 
-export async function POST(request:Request){
 
- const body = await request.json();
+export async function POST(req:Request){
 
- const room = await create(
-    "room",
-    body
- );
+ const body = await req.json();
 
- return Response.json(room);
+
+ const data = await rooms.create(body);
+
+
+ return Response.json({
+   success:true,
+   data
+ });
 
 }
