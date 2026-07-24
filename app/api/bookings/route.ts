@@ -197,12 +197,8 @@ export async function POST(
 
 
 
-    const bookingData: Prisma.BookingCreateInput = {
-      user: {
-        connect: {
-          id: userId,
-        },
-      },
+    const bookingData: Prisma.BookingUncheckedCreateInput = {
+      userId,
       startTime: start,
       endTime: end,
     };
