@@ -48,21 +48,18 @@ const navItems = [
 
   {
     label:"Users",
-    href:"/dashboard/users",
+    href:"/users",
     icon:<GroupIcon/>
   },
 
 
   {
     label:"Bookings",
-    href:"/dashboard/bookings",
+    href:"/bookings",
     icon:<EventNoteIcon/>
   }
 
 ];
-
-
-
 
 
 interface DashboardLayoutProps {
