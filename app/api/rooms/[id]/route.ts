@@ -1,59 +1,159 @@
 import { prisma } from "@/lib/prisma";
-import { createCrud } from "@/lib/crud";
 
 
-const rooms = createCrud(prisma.room);
+type Context = {
+  params: Promise<{
+    id:string;
+  }>;
+};
+
 
 
 export async function GET(
-req:Request,
-{params}:{params:{id:string}}
+  req:Request,
+  context:Context
 ){
 
-const data = await rooms.findUnique(params.id);
+  try{
 
-return Response.json({
-success:true,
-data
-});
+    const {id}=await context.params;
+
+
+    const room = await prisma.room.findUnique({
+
+      where:{
+        id
+      },
+
+      include:{
+        bookings:true
+      }
+
+    });
+
+
+    return Response.json({
+
+      success:true,
+      data:room
+
+    });
+
+
+  }catch(error:any){
+
+    return Response.json(
+      {
+        success:false,
+        error:error.message
+      },
+      {
+        status:500
+      }
+    );
+
+  }
 
 }
+
 
 
 
 export async function PUT(
-req:Request,
-{params}:{params:{id:string}}
+ req:Request,
+ context:Context
 ){
 
-const body = await req.json();
+ try{
 
-const data = await rooms.update(
-params.id,
-body
-);
+   const {id}=await context.params;
+
+   const body=await req.json();
 
 
-return Response.json({
-success:true,
-data
-});
+   const room=await prisma.room.update({
+
+     where:{
+       id
+     },
+
+     data:{
+       ...body
+     }
+
+   });
+
+
+
+   return Response.json({
+
+     success:true,
+     data:room
+
+   });
+
+
+
+ }catch(error:any){
+
+   return Response.json(
+    {
+      success:false,
+      error:error.message
+    },
+    {
+      status:500
+    }
+   );
+
+ }
 
 }
 
 
 
+
 export async function DELETE(
-req:Request,
-{params}:{params:{id:string}}
+ req:Request,
+ context:Context
 ){
 
-await rooms.delete(params.id);
+ try{
+
+   const {id}=await context.params;
 
 
-return Response.json({
-success:true,
-message:"Room deleted"
-});
+   await prisma.room.delete({
+
+     where:{
+       id
+     }
+
+   });
+
+
+
+   return Response.json({
+
+     success:true,
+     message:"Room deleted"
+
+   });
+
+
+
+ }catch(error:any){
+
+   return Response.json(
+    {
+      success:false,
+      error:error.message
+    },
+    {
+      status:500
+    }
+   );
+
+ }
 
 }

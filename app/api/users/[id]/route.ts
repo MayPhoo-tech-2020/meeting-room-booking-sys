@@ -1,60 +1,145 @@
 import { prisma } from "@/lib/prisma";
-import { createCrud } from "@/lib/crud";
 
 
-const users = createCrud(prisma.user);
+type Context = {
+  params: Promise<{
+    id: string;
+  }>;
+};
 
 
 export async function GET(
- req:Request,
- {params}:{params:{id:string}}
-){
+  req: Request,
+  context: Context
+) {
 
- const data = await users.findUnique(params.id);
+  try {
+
+    const { id } = await context.params;
 
 
- return Response.json({
-   success:true,
-   data
- });
+    const user = await prisma.user.findUnique({
+      where: {
+        id
+      },
+      include:{
+        bookings:true
+      }
+    });
+
+
+    return Response.json({
+      success:true,
+      data:user
+    });
+
+
+  } catch(error:any){
+
+    return Response.json(
+      {
+        success:false,
+        error:error.message
+      },
+      {
+        status:500
+      }
+    );
+
+  }
 
 }
 
 
 
 export async function PUT(
- req:Request,
- {params}:{params:{id:string}}
-){
+  req: Request,
+  context: Context
+) {
 
- const body = await req.json();
+  try {
 
- const data = await users.update(
-   params.id,
-   body
- );
+    const { id } = await context.params;
+
+    const body = await req.json();
 
 
- return Response.json({
-   success:true,
-   data
- });
+    const user = await prisma.user.update({
+
+      where:{
+        id
+      },
+
+      data:{
+        ...body
+      }
+
+    });
+
+
+    return Response.json({
+      success:true,
+      data:user
+    });
+
+
+  } catch(error:any){
+
+    return Response.json(
+      {
+        success:false,
+        error:error.message
+      },
+      {
+        status:500
+      }
+    );
+
+  }
 
 }
 
 
 
 export async function DELETE(
- req:Request,
- {params}:{params:{id:string}}
-){
+  req: Request,
+  context: Context
+) {
 
- await users.delete(params.id);
+  try {
+
+    const { id } = await context.params;
 
 
- return Response.json({
-   success:true,
-   message:"User deleted"
- });
+    await prisma.user.delete({
+
+      where:{
+        id
+      }
+
+    });
+
+
+    return Response.json({
+
+      success:true,
+      message:"User deleted"
+
+    });
+
+
+  } catch(error:any){
+
+    return Response.json(
+      {
+        success:false,
+        error:error.message
+      },
+      {
+        status:500
+      }
+    );
+
+  }
 
 }

@@ -1,170 +1,193 @@
 import { prisma } from "@/lib/prisma";
 
 
+type Context = {
+  params: Promise<{
+    id:string;
+  }>;
+};
+
+
+
 export async function GET(
  req:Request,
- {params}:{params:{id:string}}
+ context:Context
 ){
 
-  try {
+ try{
+
+  const {id}=await context.params;
 
 
-    const booking = await prisma.booking.findUnique({
+  const booking = await prisma.booking.findUnique({
 
-      where:{
-        id:params.id
-      },
+    where:{
+      id
+    },
 
-      include:{
-        user:true,
-        room:true
-      }
+    include:{
+      user:true,
+      room:true
+    }
 
-    });
-
-
-    return Response.json({
-      success:true,
-      data:booking
-    });
+  });
 
 
+  return Response.json({
 
-  }catch(error:any){
+    success:true,
+    data:booking
 
-    return Response.json(
-      {
-        success:false,
-        error:error.message
-      },
-      {
-        status:500
-      }
-    );
+  });
 
-  }
+
+
+ }catch(error:any){
+
+  return Response.json(
+   {
+    success:false,
+    error:error.message
+   },
+   {
+    status:500
+   }
+  );
+
+ }
 
 }
+
+
 
 
 
 export async function PUT(
  req:Request,
- {params}:{params:{id:string}}
+ context:Context
 ){
 
-  try {
+ try{
 
-    const body = await req.json();
+  const {id}=await context.params;
 
-
-    const booking = await prisma.booking.update({
-
-      where:{
-        id:params.id
-      },
-
-
-      data:{
-
-        ...(body.userId && {
-          userId:body.userId
-        }),
-
-        ...(body.roomId && {
-          roomId:body.roomId
-        }),
-
-        ...(body.startTime && {
-          startTime:new Date(body.startTime)
-        }),
-
-        ...(body.endTime && {
-          endTime:new Date(body.endTime)
-        }),
-
-        ...(body.status && {
-          status:body.status
-        })
-
-      },
-
-
-      include:{
-        user:true,
-        room:true
-      }
-
-    });
+  const body=await req.json();
 
 
 
-    return Response.json({
-      success:true,
-      data:booking
-    });
+  const booking = await prisma.booking.update({
+
+    where:{
+      id
+    },
+
+
+    data:{
+
+      ...(body.userId && {
+        userId:body.userId
+      }),
+
+      ...(body.roomId && {
+        roomId:body.roomId
+      }),
+
+      ...(body.startTime && {
+        startTime:new Date(body.startTime)
+      }),
+
+      ...(body.endTime && {
+        endTime:new Date(body.endTime)
+      }),
+
+      ...(body.status && {
+        status:body.status
+      })
+
+    },
+
+
+    include:{
+      user:true,
+      room:true
+    }
+
+
+  });
 
 
 
-  }catch(error:any){
+  return Response.json({
 
-    return Response.json(
-      {
-        success:false,
-        error:error.message
-      },
-      {
-        status:500
-      }
-    );
+    success:true,
+    data:booking
 
-  }
+  });
+
+
+
+ }catch(error:any){
+
+  return Response.json(
+   {
+    success:false,
+    error:error.message
+   },
+   {
+    status:500
+   }
+  );
+
+ }
 
 }
+
+
 
 
 
 
 export async function DELETE(
  req:Request,
- {params}:{params:{id:string}}
+ context:Context
 ){
 
-  try {
+ try{
+
+  const {id}=await context.params;
 
 
-    await prisma.booking.delete({
+  await prisma.booking.delete({
 
-      where:{
-        id:params.id
-      }
+    where:{
+      id
+    }
 
-    });
-
-
-
-    return Response.json({
-
-      success:true,
-
-      message:"Booking deleted"
-
-    });
+  });
 
 
 
-  }catch(error:any){
+  return Response.json({
 
-    return Response.json(
-      {
-        success:false,
-        error:error.message
-      },
-      {
-        status:500
-      }
-    );
+    success:true,
+    message:"Booking deleted"
 
-  }
+  });
+
+
+
+ }catch(error:any){
+
+  return Response.json(
+   {
+    success:false,
+    error:error.message
+   },
+   {
+    status:500
+   }
+  );
+
+ }
 
 }
