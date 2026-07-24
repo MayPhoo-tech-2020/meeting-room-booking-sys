@@ -8,7 +8,6 @@ const normalizeBookings = (payload: unknown): Booking[] => {
   return (list as Array<Partial<Booking>>).map((booking) => ({
     id: booking.id ?? '',
     title: booking.title ?? 'Untitled Booking',
-    roomId: booking.roomId ?? '',
     userId: booking.userId ?? '',
     startTime: booking.startTime ?? new Date(),
     endTime: booking.endTime ?? new Date(),
@@ -16,7 +15,6 @@ const normalizeBookings = (payload: unknown): Booking[] => {
     createdAt: booking.createdAt ?? new Date(),
     updatedAt: booking.updatedAt ?? new Date(),
     user: booking.user,
-    room: booking.room,
   }));
 };
 
@@ -25,7 +23,7 @@ export const getBookings = async (): Promise<Booking[]> => {
   return normalizeBookings(response.data);
 };
 
-export const createBooking = async (booking: Omit<Booking, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'user' | 'room'>): Promise<Booking> => {
+export const createBooking = async (booking: Omit<Booking, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'user'>): Promise<Booking> => {
   const response = await api.post('/api/bookings', booking, {
     headers: getAuthHeaders(getStoredRole(), getStoredUserId()),
   });

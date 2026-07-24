@@ -10,25 +10,19 @@ export async function GET() {
   try {
 
     const bookings = await prisma.booking.findMany({
-
-      include:{
-        user:{
-          select:{
-            id:true,
-            name:true,
-            email:true,
-            role:true,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
           },
         },
-
-        room:true,
       },
-
-
-      orderBy:{
-        startTime:"asc",
+      orderBy: {
+        startTime: "asc",
       },
-
     });
 
 
@@ -77,32 +71,18 @@ export async function POST(
     const body = await req.json();
 
 
-    const {
-      userId,
-      roomId,
-      startTime,
-      endTime,
-    } = body;
+    const { userId, startTime, endTime } = body;
 
-
-
-    if(
-      !userId ||
-      !roomId ||
-      !startTime ||
-      !endTime
-    ){
-
+    if (!userId || !startTime || !endTime) {
       return NextResponse.json(
         {
-          success:false,
-          error:"userId, roomId, startTime and endTime are required",
+          success: false,
+          error: "userId, startTime and endTime are required",
         },
         {
-          status:400,
+          status: 400,
         }
       );
-
     }
 
 
@@ -178,19 +158,13 @@ export async function POST(
       await prisma.booking.findFirst({
 
         where:{
-
-          roomId,
-
-
           startTime:{
             lt:end,
           },
 
-
           endTime:{
             gt:start,
           },
-
         },
 
       });
@@ -227,23 +201,12 @@ export async function POST(
       await prisma.booking.create({
 
         data:{
-
           userId,
-
-          roomId,
-
-          startTime:start,
-
-          endTime:end,
-
+          startTime: start,
+          endTime: end,
         },
-
         include:{
-
-          user:true,
-
-          room:true,
-
+          user: true,
         },
 
       });

@@ -4,7 +4,6 @@ const prisma = new PrismaClient();
 
 async function main() {
   await prisma.booking.deleteMany();
-  await prisma.room.deleteMany();
   await prisma.user.deleteMany();
 
   // Create Users
@@ -15,19 +14,6 @@ async function main() {
           name: `User ${index + 1}`,
           email: `user${index + 1}@example.com`,
           role: index === 0 ? Role.ADMIN : Role.USER,
-        },
-      })
-    )
-  );
-
-  // Create Rooms
-  const rooms = await Promise.all(
-    Array.from({ length: 5 }).map((_, index) =>
-      prisma.room.create({
-        data: {
-          name: `Meeting Room ${String.fromCharCode(65 + index)}`,
-          description: `Room ${index + 1} description`,
-          capacity: (index + 1) * 5,
         },
       })
     )
@@ -59,7 +45,6 @@ async function main() {
           status: statuses[index % statuses.length],
 
           userId: users[index % users.length].id,
-          roomId: rooms[index % rooms.length].id,
         },
       })
     )
@@ -67,7 +52,6 @@ async function main() {
 
   console.log("Created:");
   console.log("10 Users");
-  console.log("5 Rooms");
   console.log("20 Bookings");
 }
 

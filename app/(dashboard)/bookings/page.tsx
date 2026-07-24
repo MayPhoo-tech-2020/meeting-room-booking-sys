@@ -40,11 +40,10 @@ export default function BookingsPage() {
     void loadBookings();
   }, []);
 
-  const handleCreate = async (values: { userId: string; roomId: string; startTime: string; endTime: string }) => {
+  const handleCreate = async (values: { userId: string; startTime: string; endTime: string }) => {
     try {
       await createBooking({
         userId: values.userId,
-        roomId: values.roomId,
         startTime: values.startTime,
         endTime: values.endTime,
       });

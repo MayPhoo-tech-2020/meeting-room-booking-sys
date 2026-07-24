@@ -18,7 +18,7 @@ export default function BookingTable({ bookings, loading = false, currentRole, c
   const columns: ColumnsType<Booking> = [
     { title: 'Title', dataIndex: 'title', render: (value: string) => value || 'Untitled Booking' },
     { title: 'User', render: (_: unknown, record: Booking) => record.user?.name || record.userId },
-    { title: 'Room', render: (_: unknown, record: Booking) => record.room?.name || record.roomId },
+
     {
       title: 'Status',
       dataIndex: 'status',

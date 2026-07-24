@@ -32,7 +32,7 @@ export default function DashboardPage() {
             <SummaryCard title="Total Bookings" value="0" description="Bookings created through the booking form" />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <SummaryCard title="Available Rooms" value="0" description="Room availability is pending integration" />
+            <SummaryCard title="Single Room Mode" value="1" description="This workspace serves one shared meeting room" />
           </Grid>
         </Grid>
       </Stack>

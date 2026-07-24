@@ -26,7 +26,6 @@ export async function GET(
             role: true,
           },
         },
-        room: true,
       },
     });
 

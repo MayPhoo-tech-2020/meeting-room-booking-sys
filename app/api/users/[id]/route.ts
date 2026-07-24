@@ -19,11 +19,7 @@ export async function GET(
         id,
       },
       include: {
-        bookings: {
-          include: {
-            room: true,
-          },
-        },
+        bookings: true,
       },
     });
 
