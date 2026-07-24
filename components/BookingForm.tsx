@@ -1,59 +1,404 @@
 "use client";
 
-import { Button, DatePicker, Form, Input } from 'antd';
+
+import { Button, DatePicker, Form } from "antd";
+
+import dayjs from "dayjs";
+
+import { useEffect, useState } from "react";
+
+
+
+
 
 interface BookingFormProps {
+
   loading?: boolean;
-  onCreate: (values: { userId: string; startTime: string; endTime: string }) => Promise<void> | void;
+
+  onCreate: (
+    values:{
+      userId:string;
+      startTime:string;
+      endTime:string;
+    }
+  ) => Promise<void> | void;
+
 }
 
-const serializeDateValue = (value: unknown): string => {
-  if (!value) {
-    return '';
-  }
 
-  if (typeof value === 'string') {
-    return value;
-  }
 
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
 
-  if (typeof value === 'object' && 'toISOString' in value && typeof (value as { toISOString?: () => string }).toISOString === 'function') {
-    return (value as { toISOString: () => string }).toISOString();
-  }
 
-  return String(value);
+
+
+type CurrentUser = {
+
+  id:string;
+
+  name:string;
+
 };
 
-export default function BookingForm({ loading = false, onCreate }: BookingFormProps) {
-  const [form] = Form.useForm();
 
-  const handleFinish = async (values: { userId: string; startTime: unknown; endTime: unknown }) => {
+
+
+
+
+
+export default function BookingForm({
+
+  loading=false,
+
+  onCreate
+
+}:BookingFormProps){
+
+
+
+  const [form] =
+    Form.useForm();
+
+
+
+  const [currentUser,setCurrentUser] =
+    useState<CurrentUser|null>(null);
+
+
+
+
+
+
+
+
+  useEffect(()=>{
+
+
+    const stored =
+      localStorage.getItem(
+        "currentUser"
+      );
+
+
+    if(stored){
+
+      setCurrentUser(
+        JSON.parse(stored)
+      );
+
+    }
+
+
+  },[]);
+
+
+
+
+
+
+
+
+
+  const handleFinish = async(values:any)=>{
+
+
+
+    if(!currentUser){
+
+      return;
+
+    }
+
+
+
+
+
+    const start =
+      values.startTime.toISOString();
+
+
+
+    const end =
+      values.endTime.toISOString();
+
+
+
+
+
+
+
     await onCreate({
-      userId: values.userId,
-      startTime: serializeDateValue(values.startTime),
-      endTime: serializeDateValue(values.endTime),
+
+      userId:currentUser.id,
+
+      startTime:start,
+
+      endTime:end,
+
     });
+
+
+
+
+
     form.resetFields();
+
+
+
   };
 
+
+
+
+
+
+
+
+
   return (
-    <Form form={form} layout="vertical" onFinish={handleFinish}>
-      <Form.Item name="userId" label="User ID" rules={[{ required: true, message: 'Please enter a user ID' }]}> 
-        <Input />
+
+    <Form
+
+      form={form}
+
+      layout="vertical"
+
+      onFinish={handleFinish}
+
+    >
+
+
+
+
+
+
+      <Form.Item
+
+        label="Created By"
+
+      >
+
+        <div
+
+          className="
+          border
+          rounded
+          p-2
+          bg-gray-50
+          "
+
+        >
+
+          {
+            currentUser
+            ?
+            currentUser.name
+            :
+            "Loading..."
+          }
+
+
+        </div>
+
+
       </Form.Item>
 
-      <Form.Item name="startTime" label="Start Time" rules={[{ required: true, message: 'Please select a start time' }]}> 
-        <DatePicker showTime style={{ width: '100%' }} />
+
+
+
+
+
+
+
+
+      <Form.Item
+
+
+        name="startTime"
+
+        label="Start Time"
+
+
+        rules={[
+
+          {
+
+            required:true,
+
+            message:
+            "Please select start time"
+
+          }
+
+        ]}
+
+
+      >
+
+
+        <DatePicker
+
+          showTime
+
+          format="YYYY-MM-DD HH:mm"
+
+          disabledDate={(current)=>
+            current &&
+            current < dayjs().startOf("day")
+          }
+
+
+          style={{
+
+            width:"100%"
+
+          }}
+
+
+        />
+
+
       </Form.Item>
-      <Form.Item name="endTime" label="End Time" rules={[{ required: true, message: 'Please select an end time' }]}> 
-        <DatePicker showTime style={{ width: '100%' }} />
+
+
+
+
+
+
+
+
+
+      <Form.Item
+
+
+        name="endTime"
+
+        label="End Time"
+
+
+        dependencies={[
+          "startTime"
+        ]}
+
+
+        rules={[
+
+
+          {
+
+            required:true,
+
+            message:
+            "Please select end time"
+
+          },
+
+
+
+
+          ({getFieldValue})=>({
+
+            validator(_,value){
+
+
+              const start =
+                getFieldValue(
+                  "startTime"
+                );
+
+
+
+              if(
+
+                !start ||
+
+                !value ||
+
+                dayjs(value)
+                .isAfter(dayjs(start))
+
+              ){
+
+                return Promise.resolve();
+
+              }
+
+
+
+              return Promise.reject(
+
+                new Error(
+                  "End time must be after start time"
+                )
+
+              );
+
+
+            }
+
+          })
+
+
+        ]}
+
+
+
+      >
+
+
+
+        <DatePicker
+
+
+          showTime
+
+
+          format="YYYY-MM-DD HH:mm"
+
+
+
+          style={{
+
+            width:"100%"
+
+          }}
+
+
+        />
+
+
       </Form.Item>
-      <Button type="primary" htmlType="submit" loading={loading}>
+
+
+
+
+
+
+
+
+
+      <Button
+
+        type="primary"
+
+        htmlType="submit"
+
+        loading={loading}
+
+      >
+
         Create Booking
+
+
       </Button>
+
+
+
+
+
+
     </Form>
+
+
   );
+
 }

@@ -3,6 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Stack,
+} from "@mui/material";
+
+import DashboardLayout from "../../../components/DashboardLayout";
+
 
 type User = {
   id: string;
@@ -13,58 +23,54 @@ type User = {
 
 
 
-export default function Dashboard() {
+export default function DashboardPage() {
 
 
   const router = useRouter();
 
 
-  const [user, setUser] = useState<User | null>(null);
+  const [user,setUser] =
+    useState<User | null>(null);
 
 
 
-  useEffect(() => {
+  useEffect(()=>{
+
 
     const storedUser =
-      localStorage.getItem("currentUser");
+      localStorage.getItem(
+        "currentUser"
+      );
 
 
-    if (storedUser) {
+    if(storedUser){
 
-      setUser(JSON.parse(storedUser));
+      setUser(
+        JSON.parse(storedUser)
+      );
 
     }
 
 
-  }, []);
+  },[]);
 
 
 
 
-  const handleLogout = () => {
-
-    localStorage.removeItem("currentUser");
-
-    localStorage.removeItem("selected-role");
-
-    router.push("/");
-
-  };
 
 
+  if(!user){
 
-
-  if (!user) {
 
     return (
 
-      <main className="p-8">
+      <DashboardLayout>
 
-        <h1 className="text-xl">
+        <Typography>
           Please login first
-        </h1>
+        </Typography>
 
-      </main>
+      </DashboardLayout>
 
     );
 
@@ -72,91 +78,268 @@ export default function Dashboard() {
 
 
 
+
+
+
+
   return (
 
-    <main className="min-h-screen bg-gray-50 p-8">
+    <DashboardLayout title="Dashboard">
 
 
-      <div className="max-w-4xl mx-auto">
+      <Stack spacing={3}>
 
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <Card>
+
+          <CardContent>
 
 
-          <div className="
-            flex
-            justify-between
-            items-center
-            mb-6
-          ">
-
-
-            <h1 className="text-3xl font-bold">
+            <Typography variant="h4">
 
               Welcome, {user.name}
 
-            </h1>
+            </Typography>
 
 
+            <Typography sx={{mt:2}}>
 
-            <button
+              Email: {user.email}
 
-              onClick={handleLogout}
-
-              className="
-                bg-red-500
-                hover:bg-red-600
-                text-white
-                px-4
-                py-2
-                rounded-lg
-                font-semibold
-              "
-
-            >
-
-              Logout
-
-            </button>
+            </Typography>
 
 
-          </div>
+            <Typography>
 
-
-
-
-          <div className="mb-6">
-
-            <p>
-              Email:
-              <span className="font-semibold ml-2">
-                {user.email}
-              </span>
-            </p>
-
-
-            <p>
               Role:
-              <span className="font-bold ml-2 text-blue-600">
+
+              <b className="ml-2">
+
                 {user.role}
-              </span>
-            </p>
 
-          </div>
+              </b>
 
-
-
-          {/* Keep your existing ADMIN / OWNER / USER sections here */}
+            </Typography>
 
 
 
-        </div>
+          </CardContent>
 
 
-      </div>
+        </Card>
 
 
-    </main>
+
+
+
+
+
+        {/* ADMIN */}
+
+        {
+          user.role === "ADMIN" && (
+
+            <Card>
+
+              <CardContent>
+
+
+                <Typography variant="h5">
+
+                  Admin Management
+
+                </Typography>
+
+
+                <Typography sx={{mt:2}}>
+
+                  Admin can:
+
+                </Typography>
+
+
+                <ul>
+
+                  <li>Create users</li>
+
+                  <li>Delete users</li>
+
+                  <li>Change user roles</li>
+
+                  <li>View all users</li>
+
+                  <li>View all bookings</li>
+
+                  <li>Delete any booking</li>
+
+                </ul>
+
+
+
+                <Button
+
+                  variant="contained"
+
+                  onClick={()=>router.push("/users")}
+
+                >
+
+                  Manage Users
+
+                </Button>
+
+
+              </CardContent>
+
+
+            </Card>
+
+          )
+        }
+
+
+
+
+
+
+
+        {/* OWNER */}
+
+        {
+          user.role === "OWNER" && (
+
+            <Card>
+
+              <CardContent>
+
+
+                <Typography variant="h5">
+
+                  Owner Dashboard
+
+                </Typography>
+
+
+
+                <Typography sx={{mt:2}}>
+
+                  Owner can:
+
+                </Typography>
+
+
+
+                <ul>
+
+                  <li>Create booking</li>
+
+                  <li>View all bookings</li>
+
+                  <li>Delete any booking</li>
+
+                  <li>View booking summary</li>
+
+                </ul>
+
+
+
+                <Button
+
+                  variant="contained"
+
+                  onClick={()=>router.push("/bookings")}
+
+                >
+
+                  View Bookings
+
+                </Button>
+
+
+
+              </CardContent>
+
+
+            </Card>
+
+
+          )
+        }
+
+
+
+
+
+
+
+        {/* USER */}
+
+        {
+          user.role === "USER" && (
+
+            <Card>
+
+              <CardContent>
+
+
+                <Typography variant="h5">
+
+                  User Dashboard
+
+                </Typography>
+
+
+
+                <Typography sx={{mt:2}}>
+
+                  User can:
+
+                </Typography>
+
+
+
+                <ul>
+
+                  <li>Create booking</li>
+
+                  <li>View all bookings</li>
+
+                  <li>Delete own bookings only</li>
+
+                </ul>
+
+
+
+                <Button
+
+                  variant="contained"
+
+                  onClick={()=>router.push("/bookings")}
+
+                >
+
+                  Create Booking
+
+                </Button>
+
+
+
+              </CardContent>
+
+
+            </Card>
+
+          )
+        }
+
+
+
+
+
+      </Stack>
+
+
+    </DashboardLayout>
 
   );
 

@@ -10,6 +10,7 @@ export async function GET() {
   try {
 
     const bookings = await prisma.booking.findMany({
+
       include: {
         user: {
           select: {
@@ -20,20 +21,22 @@ export async function GET() {
           },
         },
       },
+
       orderBy: {
         startTime: "asc",
       },
+
     });
 
 
 
     return NextResponse.json({
 
-      success:true,
+      success: true,
 
-      count:bookings.length,
+      count: bookings.length,
 
-      data:bookings,
+      data: bookings,
 
     });
 
@@ -41,15 +44,17 @@ export async function GET() {
 
   } catch(error) {
 
-
     return NextResponse.json(
+
       {
         success:false,
         error:String(error),
       },
+
       {
         status:500,
       }
+
     );
 
   }
@@ -65,45 +70,68 @@ export async function POST(
   req: NextRequest
 ) {
 
+
   try {
 
 
     const body = await req.json();
 
 
-    const { userId, startTime, endTime } = body;
+    const {
+      userId,
+      startTime,
+      endTime,
+    } = body;
 
-    if (!userId || !startTime || !endTime) {
+
+
+    if(
+      !userId ||
+      !startTime ||
+      !endTime
+    ) {
+
       return NextResponse.json(
+
         {
-          success: false,
-          error: "userId, startTime and endTime are required",
+          success:false,
+          error:"userId, startTime and endTime are required",
         },
+
         {
-          status: 400,
+          status:400,
         }
+
       );
+
     }
 
 
 
+
     const start = new Date(startTime);
+
     const end = new Date(endTime);
+
 
 
 
     // Rule 1:
     // startTime must be before endTime
+
     if(start >= end) {
 
       return NextResponse.json(
+
         {
           success:false,
-          error:"startTime must be before endTime",
+          error:"Start time must be before end time",
         },
+
         {
           status:400,
         }
+
       );
 
     }
@@ -111,53 +139,14 @@ export async function POST(
 
 
 
-
-    /*
-      Overlap rule:
-
-      Existing:
-      A -------- B
-
-      New overlaps when:
-
-      newStart < existingEnd
-      AND
-      newEnd > existingStart
-
-
-      This catches:
-
-      1. Same range
-
-      10-11
-      10-11
-
-
-      2. Partial overlap
-
-      10-12
-        11-13
-
-
-      3. Inside another
-
-      10------14
-        11-12
-
-
-      4. Start inside
-
-      10-12
-          12-13  <-- allowed because equal
-
-    */
-
-
+    // Rule 2:
+    // Prevent overlapping bookings
 
     const conflict =
       await prisma.booking.findFirst({
 
         where:{
+
           startTime:{
             lt:end,
           },
@@ -165,6 +154,7 @@ export async function POST(
           endTime:{
             gt:start,
           },
+
         },
 
       });
@@ -172,23 +162,28 @@ export async function POST(
 
 
 
-
-    if(conflict){
+    if(conflict) {
 
 
       return NextResponse.json(
+
         {
           success:false,
+
           error:"Booking time overlaps with existing booking",
+
           conflict:{
             id:conflict.id,
             startTime:conflict.startTime,
             endTime:conflict.endTime,
           },
+
         },
+
         {
           status:409,
         }
+
       );
 
 
@@ -197,30 +192,48 @@ export async function POST(
 
 
 
-    const bookingData: Prisma.BookingUncheckedCreateInput = {
+
+    const bookingData:
+      Prisma.BookingUncheckedCreateInput = {
+
       userId,
-      startTime: start,
-      endTime: end,
+
+      startTime:start,
+
+      endTime:end,
+
+      status:"PENDING",
+
     };
 
-    const booking = await prisma.booking.create({
-      data: bookingData,
-      include: {
-        user: true,
-      },
-    });
+
+
+
+    const booking =
+      await prisma.booking.create({
+
+        data:bookingData,
+
+        include:{
+          user:true,
+        },
+
+      });
 
 
 
 
     return NextResponse.json(
+
       {
         success:true,
         data:booking,
       },
+
       {
         status:201,
       }
+
     );
 
 
@@ -242,6 +255,8 @@ export async function POST(
 
     );
 
+
   }
+
 
 }

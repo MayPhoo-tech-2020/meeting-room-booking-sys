@@ -9,60 +9,84 @@ export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+
   try {
+
     const { id } = await context.params;
 
 
     const booking = await prisma.booking.findUnique({
-      where: {
+
+      where:{
         id,
       },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
+
+      include:{
+        user:{
+          select:{
+            id:true,
+            name:true,
+            email:true,
+            role:true,
           },
         },
       },
+
     });
 
 
-    if (!booking) {
+
+    if(!booking){
+
       return NextResponse.json(
+
         {
-          success: false,
-          error: "Booking not found",
+          success:false,
+          error:"Booking not found",
         },
+
         {
-          status: 404,
+          status:404,
         }
+
       );
+
     }
 
 
+
     return NextResponse.json({
-      success: true,
-      data: booking,
+
+      success:true,
+
+      data:booking,
+
     });
 
 
-  } catch (error) {
+
+  } catch(error){
+
 
     return NextResponse.json(
+
       {
-        success: false,
-        error: String(error),
+        success:false,
+        error:String(error),
       },
+
       {
-        status: 500,
+        status:500,
       }
+
     );
 
+
   }
+
 }
+
+
 
 
 
@@ -73,120 +97,172 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
 
+
   try {
 
-    const { id } = await context.params;
+
+    const userId =
+      req.headers.get("x-user-id");
 
 
-    const userId = req.headers.get("x-user-id");
-    const role = req.headers.get("x-user-role");
+    const role =
+      req.headers.get("x-user-role");
 
 
-    if (!userId || !role) {
+
+    if(!userId || !role){
+
       return NextResponse.json(
+
         {
-          success: false,
-          error: "User information missing",
+          success:false,
+          error:"User information missing",
         },
+
         {
-          status: 401,
+          status:401,
         }
+
       );
+
     }
 
 
 
-    const booking = await prisma.booking.findUnique({
-      where: {
-        id,
-      },
-    });
 
 
+    if(
+      role !== "ADMIN" &&
+      role !== "OWNER" &&
+      role !== "USER"
+    ){
 
-    if (!booking) {
       return NextResponse.json(
+
         {
-          success: false,
-          error: "Booking not found",
+          success:false,
+          error:"Invalid role",
         },
+
         {
-          status: 404,
+          status:403,
         }
+
       );
+
     }
+
+
+
+
+
+    const { id } =
+      await context.params;
+
+
+
+
+    const booking =
+      await prisma.booking.findUnique({
+
+        where:{
+          id,
+        },
+
+      });
+
+
+
+
+
+    if(!booking){
+
+      return NextResponse.json(
+
+        {
+          success:false,
+          error:"Booking not found",
+        },
+
+        {
+          status:404,
+        }
+
+      );
+
+    }
+
+
 
 
 
     // USER can delete only own booking
-    if (
+
+    if(
       role === "USER" &&
       booking.userId !== userId
-    ) {
+    ){
 
       return NextResponse.json(
+
         {
-          success: false,
-          error: "You can delete only your own bookings",
+          success:false,
+          error:"You can delete only your own bookings",
         },
+
         {
-          status: 403,
+          status:403,
         }
+
       );
 
     }
 
 
 
-    // OWNER and ADMIN can delete any booking
-
-    if (
-      role !== "USER" &&
-      role !== "OWNER" &&
-      role !== "ADMIN"
-    ) {
-
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid role",
-        },
-        {
-          status: 403,
-        }
-      );
-
-    }
 
 
+    // ADMIN and OWNER can delete any booking
 
     await prisma.booking.delete({
-      where: {
+
+      where:{
         id,
       },
+
     });
+
+
 
 
 
     return NextResponse.json({
-      success: true,
-      message: "Booking deleted successfully",
+
+      success:true,
+
+      message:"Booking deleted successfully",
+
     });
 
 
 
-  } catch(error) {
+
+  } catch(error){
 
 
     return NextResponse.json(
+
       {
         success:false,
         error:String(error),
       },
+
       {
         status:500,
       }
+
     );
+
 
   }
 
