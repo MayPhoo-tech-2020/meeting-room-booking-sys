@@ -97,37 +97,6 @@ const normalizeUsers = (
 
 
 
-export const getUsers =
-async ():Promise<User[]> => {
-
-
-
-  const response =
-    await api.get(
-
-      "/api/users",
-
-      {
-
-        headers:
-          getAuthHeaders(
-            getStoredRole()
-          ),
-
-      }
-
-    );
-
-
-
-  return normalizeUsers(
-    response.data
-  );
-
-
-};
-
-
 
 
 
@@ -268,5 +237,19 @@ async (
   );
 
 
+
+};
+
+export const getUsers = async(): Promise<User[]> => {
+
+  const response =
+    await api.get(
+      "/api/users"
+    );
+
+
+  return normalizeUsers(
+    response.data
+  );
 
 };

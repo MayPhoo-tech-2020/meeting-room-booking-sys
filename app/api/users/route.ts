@@ -1,78 +1,63 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient, Role } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 
-
 // GET /api/users
-// ADMIN only
-export async function GET(
-  req: NextRequest
-) {
+// Public: used by login user selector
+export async function GET() {
 
   try {
-
-
-    const role =
-      req.headers.get("x-user-role");
-
-
-
-    if(role !== "ADMIN") {
-
-      return NextResponse.json(
-
-        {
-          success:false,
-          error:"Only admin can view users",
-        },
-
-        {
-          status:403,
-        }
-
-      );
-
-    }
-
-
-
-
 
     const users =
       await prisma.user.findMany({
 
-        orderBy:{
-          createdAt:"desc",
-        },
+        select: {
 
-        include:{
+          id: true,
 
-          _count:{
-            select:{
-              bookings:true,
+          name: true,
+
+          email: true,
+
+          role: true,
+
+          createdAt: true,
+
+          updatedAt: true,
+
+          _count: {
+
+            select: {
+
+              bookings: true,
+
             },
+
           },
 
         },
+
+
+        orderBy: {
+
+          createdAt: "desc",
+
+        },
+
 
       });
 
 
 
-
-
     return NextResponse.json({
 
-      success:true,
+      success: true,
 
-      count:users.length,
-
-      data:users,
+      data: users,
 
     });
-
 
 
 
@@ -82,12 +67,17 @@ export async function GET(
     return NextResponse.json(
 
       {
+
         success:false,
+
         error:String(error),
+
       },
 
       {
+
         status:500,
+
       }
 
     );
@@ -101,21 +91,19 @@ export async function GET(
 
 
 
-
-
-
 // POST /api/users
 // ADMIN only
 export async function POST(
   req: NextRequest
 ) {
 
-
   try {
 
 
     const role =
-      req.headers.get("x-user-role");
+      req.headers.get(
+        "x-user-role"
+      );
 
 
 
@@ -125,19 +113,23 @@ export async function POST(
       return NextResponse.json(
 
         {
+
           success:false,
-          error:"Only admin can create users",
+
+          error:
+          "Only admin can create users",
+
         },
 
         {
+
           status:403,
+
         }
 
       );
 
-
     }
-
 
 
 
@@ -147,132 +139,20 @@ export async function POST(
 
 
 
-    const {
-      name,
-      email,
-      role:newRole,
-    } = body;
-
-
-
-
-
-    if(
-      !name ||
-      !email
-    ){
-
-      return NextResponse.json(
-
-        {
-          success:false,
-          error:"Name and email are required",
-        },
-
-        {
-          status:400,
-        }
-
-      );
-
-    }
-
-
-
-
-
-    const existingUser =
-      await prisma.user.findUnique({
-
-        where:{
-          email,
-        },
-
-      });
-
-
-
-
-
-    if(existingUser){
-
-      return NextResponse.json(
-
-        {
-          success:false,
-          error:"Email already exists",
-        },
-
-        {
-          status:409,
-        }
-
-      );
-
-    }
-
-
-
-
-
-
-    let userRole: Role = Role.USER;
-
-
-
-
-
-    if(newRole){
-
-
-      if(
-        !Object.values(Role).includes(newRole)
-      ){
-
-        return NextResponse.json(
-
-          {
-            success:false,
-            error:"Invalid role",
-          },
-
-          {
-            status:400,
-          }
-
-        );
-
-      }
-
-
-
-      userRole = newRole;
-
-
-    }
-
-
-
-
-
-
-
     const user =
       await prisma.user.create({
 
-        data:{
+        data: {
 
-          name,
+          name: body.name,
 
-          email,
+          email: body.email,
 
-          role:userRole,
+          role: body.role ?? "USER",
 
         },
 
       });
-
-
 
 
 
@@ -280,38 +160,45 @@ export async function POST(
     return NextResponse.json(
 
       {
+
         success:true,
+
         data:user,
+
       },
 
       {
+
         status:201,
+
       }
 
     );
 
 
 
-
-
-  } catch(error){
+  } catch(error) {
 
 
     return NextResponse.json(
 
       {
+
         success:false,
+
         error:String(error),
+
       },
 
       {
+
         status:500,
+
       }
 
     );
 
 
   }
-
 
 }
