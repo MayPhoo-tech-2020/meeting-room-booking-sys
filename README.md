@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Meeting Room Booking System
 
-## Getting Started
+## Project Overview
 
-First, run the development server:
+This project is a Next.js + TypeScript frontend for a meeting room booking system. It provides a dashboard experience for managing users and bookings through a deployed API backend.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The current frontend is focused on the UI flow for:
+- Dashboard overview
+- User management
+- Booking management
+- Role-based permissions
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Next.js 16
+- React 19
+- TypeScript
+- Material UI
+- Ant Design
+- Axios
+- Prisma ORM
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Run Frontend Locally
 
-## Learn More
+The frontend can be run locally without setting up a local database because it uses the deployed API.
 
-To learn more about Next.js, take a look at the following resources:
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Open the app in your browser:
+   - http://localhost:3000
 
-## Deploy on Vercel
+## Deployed URL
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Frontend: https://meeting-room-booking-sys-ten.vercel.app
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## API Endpoints
+
+The frontend connects to the deployed backend at:
+- https://meeting-room-booking-sys-ten.vercel.app
+
+Available endpoints:
+- GET /api/users
+- POST /api/users
+- PATCH /api/users/:id
+- DELETE /api/users/:id
+- GET /api/bookings
+- POST /api/bookings
+- DELETE /api/bookings/:id
+- GET /api/rooms
+- GET /api/rooms/:id
+- GET /api/test-db
+
+## Role Permission Explanation
+
+Role-based permissions are handled through the x-user-role header.
+
+Supported roles:
+- ADMIN: can view and manage all users and bookings
+- OWNER: can manage bookings, but user management is restricted to the backend rules
+- USER: can view bookings and delete only their own bookings
+
+The frontend uses the selected role from localStorage to simulate these permissions for testing purposes.
+
+## Database Note
+
+The application uses Prisma with a remote Prisma Postgres database hosted externally. A local database setup is not required to run the frontend, because the deployed API already serves the data.
+
+## Test User Examples
+
+Sample user accounts and roles that can be used for testing:
+- Admin: user1@example.com / role ADMIN
+- User: user2@example.com / role USER
+- User: may@example.com / role USER
+
+These are examples of the seeded data currently exposed through the deployed API.
