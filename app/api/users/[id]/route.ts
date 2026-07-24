@@ -1,18 +1,14 @@
-import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient, Role } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 
-type Context = {
-  params: Promise<{
-    id: string;
-  }>;
-};
-
-
+// GET /api/users/:id
 export async function GET(
-  req: Request,
-  context: Context
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
-
   try {
 
     const { id } = await context.params;
@@ -20,80 +16,144 @@ export async function GET(
 
     const user = await prisma.user.findUnique({
       where: {
-        id
+        id,
       },
-      include:{
-        bookings:true
-      }
+      include: {
+        bookings: {
+          include: {
+            room: true,
+          },
+        },
+      },
     });
 
 
-    return Response.json({
-      success:true,
-      data:user
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+
+    return NextResponse.json({
+      success: true,
+      data: user,
     });
 
 
-  } catch(error:any){
+  } catch(error) {
 
-    return Response.json(
+    return NextResponse.json(
       {
         success:false,
-        error:error.message
+        error:String(error),
       },
       {
-        status:500
+        status:500,
       }
     );
 
   }
-
 }
 
 
 
-export async function PUT(
-  req: Request,
-  context: Context
+
+
+// PATCH /api/users/:id
+// Update role
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
 
   try {
 
+    const adminRole = req.headers.get("x-user-role");
+
+
+    if(adminRole !== "ADMIN") {
+
+      return NextResponse.json(
+        {
+          success:false,
+          error:"Only admin can update users",
+        },
+        {
+          status:403,
+        }
+      );
+
+    }
+
+
+
     const { id } = await context.params;
 
+
     const body = await req.json();
+
+
+    const { role } = body;
+
+
+
+    if(!role || !Object.values(Role).includes(role)) {
+
+      return NextResponse.json(
+        {
+          success:false,
+          error:"Valid role is required",
+        },
+        {
+          status:400,
+        }
+      );
+
+    }
+
 
 
     const user = await prisma.user.update({
 
       where:{
-        id
+        id,
       },
 
       data:{
-        ...body
-      }
+        role,
+      },
 
     });
 
 
-    return Response.json({
+
+    return NextResponse.json({
       success:true,
-      data:user
+      data:user,
     });
 
 
-  } catch(error:any){
 
-    return Response.json(
+  } catch(error) {
+
+
+    return NextResponse.json(
       {
         success:false,
-        error:error.message
+        error:String(error),
       },
       {
-        status:500
+        status:500,
       }
     );
+
 
   }
 
@@ -101,42 +161,102 @@ export async function PUT(
 
 
 
+
+
+
+
+// DELETE /api/users/:id
+// Admin only
 export async function DELETE(
-  req: Request,
-  context: Context
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
 
   try {
 
+
+    const adminRole = req.headers.get("x-user-role");
+
+
+    if(adminRole !== "ADMIN") {
+
+      return NextResponse.json(
+        {
+          success:false,
+          error:"Only admin can delete users",
+        },
+        {
+          status:403,
+        }
+      );
+
+    }
+
+
+
     const { id } = await context.params;
 
 
-    await prisma.user.delete({
 
+    const user = await prisma.user.findUnique({
       where:{
-        id
-      }
-
+        id,
+      },
     });
 
 
-    return Response.json({
 
+    if(!user) {
+
+      return NextResponse.json(
+        {
+          success:false,
+          error:"User not found",
+        },
+        {
+          status:404,
+        }
+      );
+
+    }
+
+
+
+    // remove user's bookings first
+    await prisma.booking.deleteMany({
+      where:{
+        userId:id,
+      },
+    });
+
+
+
+    // remove user
+    await prisma.user.delete({
+      where:{
+        id,
+      },
+    });
+
+
+
+    return NextResponse.json({
       success:true,
-      message:"User deleted"
-
+      message:"User and related bookings deleted successfully",
     });
 
 
-  } catch(error:any){
 
-    return Response.json(
+  } catch(error) {
+
+
+    return NextResponse.json(
       {
         success:false,
-        error:error.message
+        error:String(error),
       },
       {
-        status:500
+        status:500,
       }
     );
 

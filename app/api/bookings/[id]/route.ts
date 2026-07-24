@@ -1,193 +1,194 @@
-import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 
-type Context = {
-  params: Promise<{
-    id:string;
-  }>;
-};
-
-
-
+// GET /api/bookings/:id
 export async function GET(
- req:Request,
- context:Context
-){
-
- try{
-
-  const {id}=await context.params;
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
 
 
-  const booking = await prisma.booking.findUnique({
+    const booking = await prisma.booking.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+        room: true,
+      },
+    });
 
-    where:{
-      id
-    },
 
-    include:{
-      user:true,
-      room:true
+    if (!booking) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Booking not found",
+        },
+        {
+          status: 404,
+        }
+      );
     }
 
-  });
+
+    return NextResponse.json({
+      success: true,
+      data: booking,
+    });
 
 
-  return Response.json({
+  } catch (error) {
 
-    success:true,
-    data:booking
+    return NextResponse.json(
+      {
+        success: false,
+        error: String(error),
+      },
+      {
+        status: 500,
+      }
+    );
 
-  });
-
-
-
- }catch(error:any){
-
-  return Response.json(
-   {
-    success:false,
-    error:error.message
-   },
-   {
-    status:500
-   }
-  );
-
- }
-
+  }
 }
 
 
 
 
-
-export async function PUT(
- req:Request,
- context:Context
-){
-
- try{
-
-  const {id}=await context.params;
-
-  const body=await req.json();
-
-
-
-  const booking = await prisma.booking.update({
-
-    where:{
-      id
-    },
-
-
-    data:{
-
-      ...(body.userId && {
-        userId:body.userId
-      }),
-
-      ...(body.roomId && {
-        roomId:body.roomId
-      }),
-
-      ...(body.startTime && {
-        startTime:new Date(body.startTime)
-      }),
-
-      ...(body.endTime && {
-        endTime:new Date(body.endTime)
-      }),
-
-      ...(body.status && {
-        status:body.status
-      })
-
-    },
-
-
-    include:{
-      user:true,
-      room:true
-    }
-
-
-  });
-
-
-
-  return Response.json({
-
-    success:true,
-    data:booking
-
-  });
-
-
-
- }catch(error:any){
-
-  return Response.json(
-   {
-    success:false,
-    error:error.message
-   },
-   {
-    status:500
-   }
-  );
-
- }
-
-}
-
-
-
-
-
-
+// DELETE /api/bookings/:id
 export async function DELETE(
- req:Request,
- context:Context
-){
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
 
- try{
+  try {
 
-  const {id}=await context.params;
+    const { id } = await context.params;
 
 
-  await prisma.booking.delete({
+    const userId = req.headers.get("x-user-id");
+    const role = req.headers.get("x-user-role");
 
-    where:{
-      id
+
+    if (!userId || !role) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User information missing",
+        },
+        {
+          status: 401,
+        }
+      );
     }
 
-  });
+
+
+    const booking = await prisma.booking.findUnique({
+      where: {
+        id,
+      },
+    });
 
 
 
-  return Response.json({
+    if (!booking) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Booking not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
 
-    success:true,
-    message:"Booking deleted"
-
-  });
 
 
+    // USER can delete only own booking
+    if (
+      role === "USER" &&
+      booking.userId !== userId
+    ) {
 
- }catch(error:any){
+      return NextResponse.json(
+        {
+          success: false,
+          error: "You can delete only your own bookings",
+        },
+        {
+          status: 403,
+        }
+      );
 
-  return Response.json(
-   {
-    success:false,
-    error:error.message
-   },
-   {
-    status:500
-   }
-  );
+    }
 
- }
+
+
+    // OWNER and ADMIN can delete any booking
+
+    if (
+      role !== "USER" &&
+      role !== "OWNER" &&
+      role !== "ADMIN"
+    ) {
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid role",
+        },
+        {
+          status: 403,
+        }
+      );
+
+    }
+
+
+
+    await prisma.booking.delete({
+      where: {
+        id,
+      },
+    });
+
+
+
+    return NextResponse.json({
+      success: true,
+      message: "Booking deleted successfully",
+    });
+
+
+
+  } catch(error) {
+
+
+    return NextResponse.json(
+      {
+        success:false,
+        error:String(error),
+      },
+      {
+        status:500,
+      }
+    );
+
+  }
 
 }
