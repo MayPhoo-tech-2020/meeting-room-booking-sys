@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -197,19 +197,22 @@ export async function POST(
 
 
 
-    const booking =
-      await prisma.booking.create({
-
-        data:{
-          userId,
-          startTime: start,
-          endTime: end,
+    const bookingData: Prisma.BookingCreateInput = {
+      user: {
+        connect: {
+          id: userId,
         },
-        include:{
-          user: true,
-        },
+      },
+      startTime: start,
+      endTime: end,
+    };
 
-      });
+    const booking = await prisma.booking.create({
+      data: bookingData,
+      include: {
+        user: true,
+      },
+    });
 
 
 
