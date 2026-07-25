@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -74,10 +74,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Rule 2 & 3: Prevent overlapping bookings with userId filter
+    // Rule 2 & 3: Prevent overlapping bookings for SINGLE ROOM
+    // ❌ NO userId filter - checking ALL bookings (single room)
     const conflict = await prisma.booking.findFirst({
       where: {
-        userId: userId, // ✅ FIXED: Now checks only the same user
         startTime: {
           lt: end,
         },
@@ -91,11 +91,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Booking time overlaps with existing booking",
+          error: "This time slot is already booked. Please choose a different time.",
           conflict: {
             id: conflict.id,
             startTime: conflict.startTime,
             endTime: conflict.endTime,
+            userId: conflict.userId,
           },
         },
         {
@@ -104,11 +105,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const bookingData: Prisma.BookingUncheckedCreateInput = {
+    // ✅ Create booking WITHOUT status field
+    const bookingData = {
       userId,
       startTime: start,
       endTime: end,
-      status: "PENDING",
     };
 
     const booking = await prisma.booking.create({
@@ -128,10 +129,11 @@ export async function POST(req: NextRequest) {
       }
     );
   } catch (error) {
+    console.error("Booking creation error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: String(error),
+        error: "Failed to create booking",
       },
       {
         status: 500,

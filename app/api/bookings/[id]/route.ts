@@ -1,102 +1,138 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// POST /api/bookings
-export async function POST(req: NextRequest) {
+// GET /api/bookings/:id
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const body = await req.json();
-    const { userId, startTime, endTime } = body;
+    const { id } = await context.params;
 
-    if (!userId || !startTime || !endTime) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "userId, startTime and endTime are required",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-
-    // Rule 1: startTime must be before endTime
-    if (start >= end) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Start time must be before end time",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    // Rule 2 & 3: Prevent overlapping bookings for the SINGLE ROOM
-    // ✅ REMOVED userId filter - checking ALL bookings
-    const conflict = await prisma.booking.findFirst({
-      where: {
-        // ❌ NO userId filter here!
-        startTime: {
-          lt: end,
-        },
-        endTime: {
-          gt: start,
-        },
-      },
-    });
-
-    if (conflict) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "This time slot is already booked. Please choose a different time.",
-          conflict: {
-            id: conflict.id,
-            startTime: conflict.startTime,
-            endTime: conflict.endTime,
-            userId: conflict.userId,
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
           },
         },
+      },
+    });
+
+    if (!booking) {
+      return NextResponse.json(
         {
-          status: 409,
+          success: false,
+          error: "Booking not found",
+        },
+        {
+          status: 404,
         }
       );
     }
 
-    // Create the booking
-    const bookingData: Prisma.BookingUncheckedCreateInput = {
-      userId,
-      startTime: start,
-      endTime: end,
-    };
-
-    const booking = await prisma.booking.create({
-      data: bookingData,
-      include: {
-        user: true,
-      },
+    return NextResponse.json({
+      success: true,
+      data: booking,
     });
-
-    return NextResponse.json(
-      {
-        success: true,
-        data: booking,
-      },
-      {
-        status: 201,
-      }
-    );
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
         error: String(error),
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
+
+// DELETE /api/bookings/:id
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const userId = req.headers.get("x-user-id");
+    const role = req.headers.get("x-user-role");
+
+    if (!userId || !role) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User information missing",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    if (role !== "ADMIN" && role !== "OWNER" && role !== "USER") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid role",
+        },
+        {
+          status: 403,
+        }
+      );
+    }
+
+    const { id } = await context.params;
+
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Booking not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    // USER can delete only own booking
+    if (role === "USER" && booking.userId !== userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "You can delete only your own bookings",
+        },
+        {
+          status: 403,
+        }
+      );
+    }
+
+    // ADMIN and OWNER can delete any booking
+    await prisma.booking.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Booking deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete booking error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to delete booking",
       },
       {
         status: 500,
