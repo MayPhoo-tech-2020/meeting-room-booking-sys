@@ -30,11 +30,19 @@ import type { User } from "../../../types/user";
 
 
 type CurrentUser = {
+
   id:string;
+
   name:string;
+
   email:string;
+
   role:"ADMIN"|"OWNER"|"USER";
+
 };
+
+
+
 
 
 
@@ -45,20 +53,75 @@ export default function UsersPage(){
   const router = useRouter();
 
 
+
   const [users,setUsers] =
     useState<User[]>([]);
+
 
 
   const [loading,setLoading] =
     useState(false);
 
 
+
   const [currentUser,setCurrentUser] =
     useState<CurrentUser | null>(null);
 
 
+
   const [error,setError] =
     useState<string | null>(null);
+
+
+
+
+
+
+
+
+  const showError = (
+    action:string,
+    err:any
+  )=>{
+
+
+    if(
+      err?.response?.data?.error
+    ){
+
+      const backendError =
+        err.response.data.error;
+
+
+
+      notification.error({
+
+        title:action,
+
+        description:
+          backendError,
+
+      });
+
+
+      return;
+
+    }
+
+
+
+    notification.error({
+
+      title:action,
+
+      description:
+        "Something went wrong. Please try again.",
+
+    });
+
+
+  };
+
 
 
 
@@ -90,24 +153,17 @@ export default function UsersPage(){
     }catch(err){
 
 
-      const message =
-        err instanceof Error
-        ? err.message
-        :"Failed to load users";
+
+      setError(
+        "Unable to load users"
+      );
 
 
 
-      setError(message);
-
-
-
-      notification.error({
-
-        title:"Failed to load users",
-
-        description:message,
-
-      });
+      showError(
+        "Failed to load users",
+        err
+      );
 
 
 
@@ -134,7 +190,9 @@ export default function UsersPage(){
 
 
     const storedUser =
-      localStorage.getItem("currentUser");
+      localStorage.getItem(
+        "currentUser"
+      );
 
 
 
@@ -150,11 +208,13 @@ export default function UsersPage(){
 
 
 
-      if(user.role !== "ADMIN"){
+      if(
+        user.role !== "ADMIN"
+      ){
 
-
-        router.push("/dashboard");
-
+        router.push(
+          "/dashboard"
+        );
 
         return;
 
@@ -193,13 +253,17 @@ export default function UsersPage(){
 
       await createUser({
 
-        name:values.name,
+        name:
+          values.name,
 
-        email:values.email,
+        email:
+          values.email,
 
-        role:values.role as User["role"],
+        role:
+          values.role as User["role"],
 
       });
+
 
 
 
@@ -218,20 +282,11 @@ export default function UsersPage(){
     }catch(err){
 
 
-      const message =
-        err instanceof Error
-        ? err.message
-        :"Failed to create user";
 
-
-
-      notification.error({
-
-        title:"Failed to create user",
-
-        description:message,
-
-      });
+      showError(
+        "Failed to create user",
+        err
+      );
 
 
     }
@@ -247,7 +302,9 @@ export default function UsersPage(){
 
 
 
-  const handleDelete = async(id:string)=>{
+  const handleDelete = async(
+    id:string
+  )=>{
 
 
     try{
@@ -269,23 +326,14 @@ export default function UsersPage(){
 
 
 
+
     }catch(err){
 
 
-      const message =
-        err instanceof Error
-        ? err.message
-        :"Failed to delete user";
-
-
-
-      notification.error({
-
-        title:"Failed to delete user",
-
-        description:message,
-
-      });
+      showError(
+        "Failed to delete user",
+        err
+      );
 
 
     }
@@ -311,9 +359,13 @@ export default function UsersPage(){
 
 
       await updateUserRole(
+
         id,
+
         nextRole
+
       );
+
 
 
 
@@ -329,23 +381,18 @@ export default function UsersPage(){
 
 
 
+
     }catch(err){
 
 
-      const message =
-        err instanceof Error
-        ? err.message
-        :"Failed to update role";
 
+      showError(
 
+        "Failed to update role",
 
-      notification.error({
+        err
 
-        title:"Failed to update role",
-
-        description:message,
-
-      });
+      );
 
 
     }
@@ -368,11 +415,13 @@ export default function UsersPage(){
 
       <DashboardLayout title="Users">
 
+
         <Alert severity="warning">
 
           Checking permission...
 
         </Alert>
+
 
       </DashboardLayout>
 
@@ -388,7 +437,9 @@ export default function UsersPage(){
 
 
 
+
   return (
+
 
     <DashboardLayout title="Users">
 
@@ -408,6 +459,7 @@ export default function UsersPage(){
 
           )
         }
+
 
 
 
@@ -440,6 +492,7 @@ export default function UsersPage(){
 
 
 
+
         <Card>
 
 
@@ -447,23 +500,34 @@ export default function UsersPage(){
 
 
             <Stack
+
               direction="row"
+
               spacing={2}
-              sx={{mb:2}}
+
+              sx={{
+                mb:2
+              }}
+
             >
+
 
 
               <Button
 
                 variant="contained"
 
-                onClick={()=>void loadUsers()}
+                onClick={()=>
+                  void loadUsers()
+                }
 
               >
 
                 Refresh
 
+
               </Button>
+
 
 
             </Stack>
@@ -472,17 +536,32 @@ export default function UsersPage(){
 
 
 
+
+
+
             <UserTable
+
 
               users={users}
 
+
               loading={loading}
 
-              currentRole={currentUser.role}
 
-              onDelete={handleDelete}
+              currentRole={
+                currentUser.role
+              }
 
-              onRoleChange={handleRoleChange}
+
+              onDelete={
+                handleDelete
+              }
+
+
+              onRoleChange={
+                handleRoleChange
+              }
+
 
             />
 
@@ -501,6 +580,7 @@ export default function UsersPage(){
 
 
     </DashboardLayout>
+
 
   );
 

@@ -1,10 +1,7 @@
-// app/api/users/[id]/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient, Role } from "@prisma/client";
 
 const prisma = new PrismaClient();
-
 
 
 
@@ -16,22 +13,20 @@ export async function GET(
 
   try {
 
-    const { id } =
-      await context.params;
+    const { id } = await context.params;
 
 
-    const user =
-      await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
 
-        where:{
-          id,
-        },
+      where:{
+        id,
+      },
 
-        include:{
-          bookings:true,
-        },
+      include:{
+        bookings:true,
+      },
 
-      });
+    });
 
 
 
@@ -70,7 +65,7 @@ export async function GET(
 
       {
         success:false,
-        error:String(error),
+        error:"Something went wrong",
       },
 
       {
@@ -89,13 +84,11 @@ export async function GET(
 
 
 
-
 // PATCH /api/users/:id
 // Change user role
-// ADMIN only
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id:string }> }
 ) {
 
   try {
@@ -117,7 +110,7 @@ export async function PATCH(
 
         {
           success:false,
-          error:"Only admin can change user roles",
+          error:"Only administrators can change roles",
         },
 
         {
@@ -130,7 +123,6 @@ export async function PATCH(
 
 
 
-
     const { id } =
       await context.params;
 
@@ -140,9 +132,7 @@ export async function PATCH(
       await req.json();
 
 
-
     const { role } = body;
-
 
 
 
@@ -155,7 +145,27 @@ export async function PATCH(
 
         {
           success:false,
-          error:"Valid role is required",
+          error:"Invalid role selected",
+        },
+
+        {
+          status:400,
+        }
+
+      );
+
+    }
+
+
+
+    // Prevent changing your own role
+    if(currentUserId === id){
+
+      return NextResponse.json(
+
+        {
+          success:false,
+          error:"You cannot change your own role",
         },
 
         {
@@ -184,7 +194,6 @@ export async function PATCH(
 
 
 
-
     return NextResponse.json({
 
       success:true,
@@ -202,7 +211,7 @@ export async function PATCH(
 
       {
         success:false,
-        error:String(error),
+        error:"Unable to update user role",
       },
 
       {
@@ -223,11 +232,11 @@ export async function PATCH(
 
 
 // DELETE /api/users/:id
-// ADMIN only
 export async function DELETE(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id:string }> }
 ) {
+
 
   try {
 
@@ -248,7 +257,7 @@ export async function DELETE(
 
         {
           success:false,
-          error:"Only admin can delete users",
+          error:"Only administrators can delete users",
         },
 
         {
@@ -262,14 +271,15 @@ export async function DELETE(
 
 
 
+
     const { id } =
       await context.params;
 
 
 
 
-    // Prevent deleting current logged-in user
     if(currentUserId === id){
+
 
       return NextResponse.json(
 
@@ -289,6 +299,7 @@ export async function DELETE(
 
 
 
+
     const user =
       await prisma.user.findUnique({
 
@@ -302,6 +313,7 @@ export async function DELETE(
 
 
     if(!user){
+
 
       return NextResponse.json(
 
@@ -321,7 +333,6 @@ export async function DELETE(
 
 
 
-    // Delete related bookings first
     await prisma.booking.deleteMany({
 
       where:{
@@ -350,8 +361,7 @@ export async function DELETE(
 
       success:true,
 
-      message:
-        "User deleted successfully",
+      message:"User deleted successfully",
 
     });
 
@@ -366,7 +376,7 @@ export async function DELETE(
 
       {
         success:false,
-        error:String(error),
+        error:"Unable to delete user",
       },
 
       {
@@ -374,6 +384,7 @@ export async function DELETE(
       }
 
     );
+
 
   }
 
