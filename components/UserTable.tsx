@@ -5,7 +5,10 @@ import { Button, Select, Table, Tag } from "antd";
 
 import type { ColumnsType } from "antd/es/table";
 
+import { useEffect, useState } from "react";
+
 import type { User } from "../types/user";
+
 
 
 
@@ -26,8 +29,6 @@ interface UserTableProps {
   )=>Promise<void>|void;
 
 }
-
-
 
 
 
@@ -60,7 +61,6 @@ const roleOptions=[
 
 
 
-
 export default function UserTable({
 
   users,
@@ -74,6 +74,19 @@ export default function UserTable({
   onRoleChange
 
 }:UserTableProps){
+
+
+
+  const [isMounted,setIsMounted] =
+    useState(false);
+
+
+
+  useEffect(()=>{
+
+    setIsMounted(true);
+
+  },[]);
 
 
 
@@ -93,8 +106,6 @@ export default function UserTable({
       dataIndex:"name"
 
     },
-
-
 
 
 
@@ -167,6 +178,7 @@ export default function UserTable({
 
 
 
+
     {
 
       title:"Bookings",
@@ -183,6 +195,7 @@ export default function UserTable({
 
 
 
+
     {
 
       title:"Created",
@@ -192,11 +205,21 @@ export default function UserTable({
       render:(value)=>
 
 
+        isMounted
+
+        ?
+
         new Date(value)
         .toLocaleDateString()
 
+        :
+
+        "-"
+
 
     },
+
+
 
 
 
@@ -236,7 +259,9 @@ export default function UserTable({
                 options={roleOptions}
 
                 style={{
+
                   width:120
+
                 }}
 
                 onChange={(value)=>
@@ -262,12 +287,7 @@ export default function UserTable({
 
                 danger
 
-                onClick={()=>
-
-
-                  onDelete(record.id)
-
-                }
+                onClick={()=>onDelete(record.id)}
 
               >
 
@@ -295,10 +315,6 @@ export default function UserTable({
 
 
   ];
-
-
-
-
 
 
 

@@ -98,6 +98,8 @@ export async function GET(
 
 
 
+
+
 // PATCH /api/users/:id
 // Change user role
 // ADMIN only
@@ -182,6 +184,8 @@ export async function PATCH(
 
 
 
+
+
     const user =
       await prisma.user.update({
 
@@ -200,6 +204,7 @@ export async function PATCH(
 
 
 
+
     return NextResponse.json({
 
       success:true,
@@ -207,6 +212,7 @@ export async function PATCH(
       data:user,
 
     });
+
 
 
 
@@ -241,6 +247,9 @@ export async function PATCH(
 
 
 
+
+
+
 // DELETE /api/users/:id
 // ADMIN only
 export async function DELETE(
@@ -254,6 +263,12 @@ export async function DELETE(
 
     const adminRole =
       req.headers.get("x-user-role");
+
+
+    const currentUserId =
+      req.headers.get("x-user-id");
+
+
 
 
 
@@ -280,8 +295,39 @@ export async function DELETE(
 
 
 
+
+
+
     const { id } =
       await context.params;
+
+
+
+
+
+
+
+    // Prevent deleting currently logged-in admin
+    if(currentUserId === id){
+
+
+      return NextResponse.json(
+
+        {
+          success:false,
+          error:"You cannot delete your own account",
+        },
+
+        {
+          status:400,
+        }
+
+      );
+
+
+    }
+
+
 
 
 
@@ -295,6 +341,7 @@ export async function DELETE(
         },
 
       });
+
 
 
 
@@ -326,6 +373,7 @@ export async function DELETE(
 
 
 
+
     /*
       Delete behavior:
 
@@ -335,6 +383,7 @@ export async function DELETE(
     */
 
 
+
     await prisma.booking.deleteMany({
 
       where:{
@@ -342,6 +391,7 @@ export async function DELETE(
       },
 
     });
+
 
 
 
@@ -362,6 +412,7 @@ export async function DELETE(
 
 
 
+
     return NextResponse.json({
 
       success:true,
@@ -370,6 +421,7 @@ export async function DELETE(
         "User deleted successfully. Related bookings were also removed.",
 
     });
+
 
 
 

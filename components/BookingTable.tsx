@@ -3,6 +3,8 @@
 import { Button, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 
+import { useEffect, useState } from "react";
+
 import type { Booking } from "../types/booking";
 
 
@@ -27,7 +29,6 @@ interface BookingTableProps {
 
 
 
-
 export default function BookingTable({
 
   bookings,
@@ -41,6 +42,19 @@ export default function BookingTable({
   onDelete
 
 }:BookingTableProps){
+
+
+
+  const [isMounted,setIsMounted] =
+    useState(false);
+
+
+
+  useEffect(()=>{
+
+    setIsMounted(true);
+
+  },[]);
 
 
 
@@ -84,9 +98,6 @@ export default function BookingTable({
 
 
 
-
-
-
   const columns:ColumnsType<Booking>=[
 
 
@@ -117,6 +128,8 @@ export default function BookingTable({
 
             {
               record.user?.email
+              ||
+              "-"
             }
 
           </div>
@@ -191,8 +204,16 @@ export default function BookingTable({
       render:(value)=>
 
 
+        isMounted
+
+        ?
+
         new Date(value)
         .toLocaleString()
+
+        :
+
+        "-"
 
 
     },
@@ -212,8 +233,16 @@ export default function BookingTable({
       render:(value)=>
 
 
+        isMounted
+
+        ?
+
         new Date(value)
         .toLocaleString()
+
+        :
+
+        "-"
 
 
     },
@@ -247,9 +276,7 @@ export default function BookingTable({
 
           danger
 
-          onClick={()=>
-            onDelete(record.id)
-          }
+          onClick={()=>onDelete(record.id)}
 
         >
 
@@ -286,7 +313,6 @@ export default function BookingTable({
 
 
 
-
   return (
 
     <Table
@@ -300,7 +326,9 @@ export default function BookingTable({
       loading={loading}
 
       pagination={{
+
         pageSize:5
+
       }}
 
     />
