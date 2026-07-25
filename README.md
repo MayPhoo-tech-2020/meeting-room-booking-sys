@@ -2,82 +2,80 @@
 
 ## Project Overview
 
-This project is a Next.js + TypeScript frontend for a meeting room booking system. It provides a dashboard experience for managing users and bookings through a deployed API backend.
+A full-stack meeting room booking system for a single meeting room with role-based access control. Built with Next.js, TypeScript, and Prisma.
 
-The current frontend is focused on the UI flow for:
-- Dashboard overview
-- User management
-- Booking management
-- Role-based permissions
+**Live Demo:** https://meeting-room-booking-sys-ten.vercel.app
+
+---
+
+## Features
+
+### Core Features
+- Single Meeting Room - Only one booking allowed per time slot
+- Booking Rules - All 5 rules implemented (startTime < endTime, no overlaps, back-to-back allowed, etc.)
+- Role-Based Access - Admin, Owner, and User roles with distinct permissions
+- User Management - Create, delete, and change user roles (Admin only)
+- Cascade Delete - Deleting a user automatically deletes all their bookings
+- Booking Summary - View bookings grouped by user (Admin/Owner only)
+- User-Friendly Errors - Clear, meaningful error messages
+
+### Booking Rules Implemented
+1. startTime must be before endTime
+2. Bookings must not overlap (single room)
+3. Overlap detection handles all cases:
+   - Identical ranges
+   - Partial overlaps
+   - One range fully inside another
+   - Back-to-back bookings (allowed)
+4. Consistent time handling (UTC/ISO 8601)
+5. Clear error responses
+
+---
+
+## Role Permissions
+
+| Feature | Admin | Owner | User |
+|---------|-------|-------|------|
+| Create booking | ✅ | ✅ | ✅ |
+| View all bookings | ✅ | ✅ | ✅ |
+| Delete own bookings | ✅ | ✅ | ✅ |
+| Delete any booking | ✅ | ✅ | ❌ |
+| View bookings grouped by user | ✅ | ✅ | ❌ |
+| View usage summary | ✅ | ✅ | ❌ |
+| Create users | ✅ | ❌ | ❌ |
+| Delete users | ✅ | ❌ | ❌ |
+| Change user roles | ✅ | ❌ | ❌ |
+| View all users | ✅ | ❌ | ❌ |
+
+---
 
 ## Tech Stack
 
-- Next.js 16
+### Frontend
+- Next.js 16 (App Router)
 - React 19
 - TypeScript
 - Material UI
 - Ant Design
 - Axios
+
+### Backend
+- Next.js API Routes (Node.js)
 - Prisma ORM
+- PostgreSQL
+- Day.js
 
-## Run Frontend Locally
+---
 
-The frontend can be run locally without setting up a local database because it uses the deployed API.
+## Local Development
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+### Prerequisites
+- Node.js 18+
+- npm or yarn
 
-2. Start the development server:
-   ```bash
-   npm run dev
-   ```
+### Installation
 
-3. Open the app in your browser:
-   - http://localhost:3000
-
-## Deployed URL
-
-- Frontend: https://meeting-room-booking-sys-ten.vercel.app
-
-## API Endpoints
-
-The frontend connects to the deployed backend at:
-- https://meeting-room-booking-sys-ten.vercel.app
-
-Available endpoints:
-- GET /api/users
-- POST /api/users
-- PATCH /api/users/:id
-- DELETE /api/users/:id
-- GET /api/bookings
-- POST /api/bookings
-- DELETE /api/bookings/:id
-- GET /api/rooms
-- GET /api/rooms/:id
-- GET /api/test-db
-
-## Role Permission Explanation
-
-Role-based permissions are handled through the x-user-role header.
-
-Supported roles:
-- ADMIN: can view and manage all users and bookings
-- OWNER: can manage bookings, but user management is restricted to the backend rules
-- USER: can view bookings and delete only their own bookings
-
-The frontend uses the selected role from localStorage to simulate these permissions for testing purposes.
-
-## Database Note
-
-The application uses Prisma with a remote Prisma Postgres database hosted externally. A local database setup is not required to run the frontend, because the deployed API already serves the data.
-
-## Test User Examples
-
-Sample user accounts and roles that can be used for testing:
-- Admin: user1@example.com / role ADMIN
-- User: user2@example.com / role USER
-- User: may@example.com / role USER
-
-These are examples of the seeded data currently exposed through the deployed API.
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/meeting-room-booking-sys.git
+cd meeting-room-booking-sys
