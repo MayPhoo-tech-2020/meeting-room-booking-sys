@@ -111,11 +111,9 @@ export default function BookingTable({
         setDeletingId(id);
         try {
           await onDelete(id);
-          notification.success({
-            message: "✅ Booking Deleted",
-            description: "The booking has been successfully removed.",
-          });
+          // ✅ Success notification handled by parent (BookingsPage)
         } catch (err: any) {
+          // ✅ Only show error notification here
           notification.error({
             message: "❌ Delete Failed",
             description: getUserFriendlyErrorMessage(err),
