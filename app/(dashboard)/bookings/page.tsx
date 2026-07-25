@@ -34,6 +34,46 @@ type CurrentUser = {
   role: "ADMIN" | "OWNER" | "USER";
 };
 
+// ✅ Helper function for user-friendly error messages
+const getUserFriendlyErrorMessage = (err: any): string => {
+  const errorData = err?.response?.data;
+  const errorMessage = errorData?.error || errorData?.message || err?.message || "";
+  const status = err?.response?.status;
+
+  // Booking errors
+  if (errorMessage.toLowerCase().includes("overlap") || errorMessage.toLowerCase().includes("conflict")) {
+    return "📅 Oops! You already have a booking at this time. Please choose a different time slot.";
+  }
+
+  if (errorMessage.toLowerCase().includes("startTime must be before endTime") || 
+      errorMessage.toLowerCase().includes("before end time")) {
+    return "⏰ The start time must be before the end time. Please adjust your booking times.";
+  }
+
+  if (errorMessage.toLowerCase().includes("not found")) {
+    return "🔍 The booking you're looking for could not be found.";
+  }
+
+  if (errorMessage.toLowerCase().includes("permission") || errorMessage.toLowerCase().includes("authorized")) {
+    return "🔒 You don't have permission to perform this action. Please contact your admin.";
+  }
+
+  if (errorMessage.toLowerCase().includes("required")) {
+    return "⚠️ Please fill in all required fields before submitting.";
+  }
+
+  // Status code based messages
+  if (status === 400) return "⚠️ Please check your input and try again.";
+  if (status === 401) return "🔒 Please login to continue.";
+  if (status === 403) return "🔒 You don't have permission to do this.";
+  if (status === 404) return "🔍 The item you're looking for could not be found.";
+  if (status === 409) return "📅 This booking conflicts with another booking. Please choose a different time.";
+  if (status === 500) return "❌ Something went wrong on our end. Please try again later.";
+
+  // Default fallback
+  return "❌ Something went wrong. Please try again or contact support if the issue persists.";
+};
+
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,15 +87,12 @@ export default function BookingsPage() {
       const data = await getBookings();
       setBookings(data);
     } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Failed to load bookings";
-
+      // ✅ User-friendly error message
+      const message = getUserFriendlyErrorMessage(err);
       setError(message);
 
       notification.error({
-        title: "Failed to load bookings",
+        title: "❌ Failed to load bookings",
         description: message,
       });
     } finally {
@@ -80,6 +117,10 @@ export default function BookingsPage() {
   }) => {
     try {
       if (!user) {
+        notification.warning({
+          title: "⚠️ Not Logged In",
+          description: "Please login to create a booking.",
+        });
         return;
       }
 
@@ -90,26 +131,17 @@ export default function BookingsPage() {
       });
 
       notification.success({
-        title: "Booking created",
+        title: "✅ Booking Created",
+        description: "Your booking has been successfully created.",
       });
 
       await loadBookings();
     } catch (err) {
-      const message =
-        axios.isAxiosError(err)
-          ? (
-              err.response?.data?.error
-              ??
-              err.response?.data?.message
-              ??
-              err.message
-            )
-          : err instanceof Error
-          ? err.message
-          : "Failed to create booking";
+      // ✅ User-friendly error message
+      const message = getUserFriendlyErrorMessage(err);
 
       notification.error({
-        title: "Failed to create booking",
+        title: "❌ Booking Creation Failed",
         description: message,
       });
     }
@@ -120,18 +152,17 @@ export default function BookingsPage() {
       await deleteBooking(id);
 
       notification.success({
-        title: "Booking deleted",
+        title: "✅ Booking Deleted",
+        description: "The booking has been successfully removed.",
       });
 
       await loadBookings();
     } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Failed to delete booking";
+      // ✅ User-friendly error message
+      const message = getUserFriendlyErrorMessage(err);
 
       notification.error({
-        title: "Failed to delete booking",
+        title: "❌ Delete Failed",
         description: message,
       });
     }
@@ -140,8 +171,8 @@ export default function BookingsPage() {
   if (!user) {
     return (
       <DashboardLayout title="Bookings">
-        <Alert severity="warning">
-          Please login first
+        <Alert severity="warning" sx={{ borderRadius: 2 }}>
+          🔒 Please login to access bookings.
         </Alert>
       </DashboardLayout>
     );
@@ -159,16 +190,16 @@ export default function BookingsPage() {
         </Typography>
 
         {error && (
-          <Alert severity="error">
+          <Alert severity="error" sx={{ borderRadius: 2 }}>
             {error}
           </Alert>
         )}
 
         {/* Create Booking Form */}
-        <Card>
+        <Card sx={{ borderRadius: 3, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
           <CardContent>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Create New Booking
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: "#2C3E50" }}>
+              📅 Create New Booking
             </Typography>
             <BookingForm
               loading={loading}
@@ -178,7 +209,7 @@ export default function BookingsPage() {
         </Card>
 
         {/* Bookings Table */}
-        <Card>
+        <Card sx={{ borderRadius: 3, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
           <CardContent>
             <Stack
               direction="row"
@@ -190,20 +221,23 @@ export default function BookingsPage() {
                 alignItems: "center"
               }}
             >
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                All Bookings
+              <Typography variant="h6" sx={{ fontWeight: 600, color: "#2C3E50" }}>
+                📋 All Bookings
               </Typography>
               <Button
                 variant="contained"
                 onClick={() => void loadBookings()}
                 sx={{
                   backgroundColor: "#1976D2",
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: 600,
                   "&:hover": {
                     backgroundColor: "#1565C0"
                   }
                 }}
               >
-                Refresh
+                🔄 Refresh
               </Button>
             </Stack>
 

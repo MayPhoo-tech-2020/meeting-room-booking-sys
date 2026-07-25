@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Table, Tag, Spin, Modal, Card, Row, Col, Statistic, Collapse } from "antd";
+import { Button, Table, Tag, Spin, Modal, Card, Row, Col, Statistic, Collapse, notification } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { ExclamationCircleOutlined, UserOutlined, CalendarOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { useState, useEffect, useMemo } from "react";
@@ -17,6 +17,36 @@ interface BookingTableProps {
   currentUserId?: string;
   onDelete: (id: string) => Promise<void> | void;
 }
+
+// ✅ Helper function for user-friendly error messages
+const getUserFriendlyErrorMessage = (err: any): string => {
+  const errorData = err?.response?.data;
+  const errorMessage = errorData?.error || errorData?.message || err?.message || "";
+  const status = err?.response?.status;
+
+  // Booking errors
+  if (errorMessage.toLowerCase().includes("not found")) {
+    return "🔍 This booking has already been deleted or doesn't exist.";
+  }
+
+  if (errorMessage.toLowerCase().includes("permission") || errorMessage.toLowerCase().includes("authorized")) {
+    return "🔒 You don't have permission to delete this booking.";
+  }
+
+  if (errorMessage.toLowerCase().includes("only your own")) {
+    return "🔒 You can only delete your own bookings.";
+  }
+
+  // Status code based messages
+  if (status === 400) return "⚠️ Please check your input and try again.";
+  if (status === 401) return "🔒 Please login to continue.";
+  if (status === 403) return "🔒 You don't have permission to do this.";
+  if (status === 404) return "🔍 The booking you're looking for could not be found.";
+  if (status === 500) return "❌ Something went wrong on our end. Please try again later.";
+
+  // Default fallback
+  return "❌ Something went wrong. Please try again or contact support if the issue persists.";
+};
 
 export default function BookingTable({
   bookings,
@@ -77,7 +107,7 @@ export default function BookingTable({
     confirm({
       title: "Delete Booking",
       icon: <ExclamationCircleOutlined />,
-      content: `Are you sure you want to delete this booking?`,
+      content: "Are you sure you want to delete this booking? This action cannot be undone.",
       okText: "Yes, Delete",
       okType: "danger",
       cancelText: "Cancel",
@@ -85,6 +115,17 @@ export default function BookingTable({
         setDeletingId(id);
         try {
           await onDelete(id);
+          // ✅ Success notification
+          notification.success({
+            message: "✅ Booking Deleted",
+            description: "The booking has been successfully removed.",
+          });
+        } catch (err: any) {
+          // ✅ User-friendly error notification
+          notification.error({
+            message: "❌ Delete Failed",
+            description: getUserFriendlyErrorMessage(err),
+          });
         } finally {
           setDeletingId(null);
         }

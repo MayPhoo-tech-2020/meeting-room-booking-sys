@@ -22,6 +22,46 @@ type CurrentUser = {
   role: string;
 };
 
+// ✅ Helper function for user-friendly error messages
+const getUserFriendlyErrorMessage = (err: any): string => {
+  const errorData = err?.response?.data;
+  const errorMessage = errorData?.error || errorData?.message || err?.message || "";
+  const status = err?.response?.status;
+
+  // Booking errors
+  if (errorMessage.toLowerCase().includes("overlap") || errorMessage.toLowerCase().includes("conflict")) {
+    return "📅 Oops! You already have a booking at this time. Please choose a different time slot.";
+  }
+
+  if (errorMessage.toLowerCase().includes("startTime must be before endTime") || 
+      errorMessage.toLowerCase().includes("before end time")) {
+    return "⏰ The start time must be before the end time. Please adjust your booking times.";
+  }
+
+  if (errorMessage.toLowerCase().includes("required")) {
+    return "⚠️ Please fill in all required fields before submitting.";
+  }
+
+  if (errorMessage.toLowerCase().includes("not found")) {
+    return "🔍 The booking you're looking for could not be found.";
+  }
+
+  if (errorMessage.toLowerCase().includes("permission") || errorMessage.toLowerCase().includes("authorized")) {
+    return "🔒 You don't have permission to perform this action. Please contact your admin.";
+  }
+
+  // Status code based messages
+  if (status === 400) return "⚠️ Please check your input and try again.";
+  if (status === 401) return "🔒 Please login to continue.";
+  if (status === 403) return "🔒 You don't have permission to do this.";
+  if (status === 404) return "🔍 The item you're looking for could not be found.";
+  if (status === 409) return "📅 This booking conflicts with another booking. Please choose a different time.";
+  if (status === 500) return "❌ Something went wrong on our end. Please try again later.";
+
+  // Default fallback
+  return "❌ Something went wrong. Please try again or contact support if the issue persists.";
+};
+
 export default function BookingForm({
   loading = false,
   onCreate
@@ -57,7 +97,8 @@ export default function BookingForm({
 
       form.resetFields();
     } catch (err) {
-      setError("Failed to create booking. Please try again.");
+      // ✅ User-friendly error message
+      setError(getUserFriendlyErrorMessage(err));
     }
   };
 
@@ -114,7 +155,7 @@ export default function BookingForm({
           rules={[
             {
               required: true,
-              message: "Please select start time"
+              message: "Please select a start time"
             }
           ]}
           className="mb-3"
@@ -142,7 +183,7 @@ export default function BookingForm({
           rules={[
             {
               required: true,
-              message: "Please select end time"
+              message: "Please select an end time"
             },
             ({ getFieldValue }) => ({
               validator(_, value) {
