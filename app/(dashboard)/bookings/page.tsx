@@ -2,14 +2,11 @@
 
 import {
   Alert,
-  Button,
   Card,
   CardContent,
   Stack,
   Typography
 } from "@mui/material";
-
-import axios from "axios";
 
 import { notification } from "antd";
 
@@ -40,7 +37,6 @@ const getUserFriendlyErrorMessage = (err: any): string => {
   const errorMessage = errorData?.error || errorData?.message || err?.message || "";
   const status = err?.response?.status;
 
-  // Booking errors
   if (errorMessage.toLowerCase().includes("overlap") || errorMessage.toLowerCase().includes("conflict")) {
     return "📅 Oops! You already have a booking at this time. Please choose a different time slot.";
   }
@@ -62,7 +58,6 @@ const getUserFriendlyErrorMessage = (err: any): string => {
     return "⚠️ Please fill in all required fields before submitting.";
   }
 
-  // Status code based messages
   if (status === 400) return "⚠️ Please check your input and try again.";
   if (status === 401) return "🔒 Please login to continue.";
   if (status === 403) return "🔒 You don't have permission to do this.";
@@ -70,7 +65,6 @@ const getUserFriendlyErrorMessage = (err: any): string => {
   if (status === 409) return "📅 This booking conflicts with another booking. Please choose a different time.";
   if (status === 500) return "❌ Something went wrong on our end. Please try again later.";
 
-  // Default fallback
   return "❌ Something went wrong. Please try again or contact support if the issue persists.";
 };
 
@@ -87,7 +81,6 @@ export default function BookingsPage() {
       const data = await getBookings();
       setBookings(data);
     } catch (err) {
-      // ✅ User-friendly error message
       const message = getUserFriendlyErrorMessage(err);
       setError(message);
 
@@ -137,7 +130,6 @@ export default function BookingsPage() {
 
       await loadBookings();
     } catch (err) {
-      // ✅ User-friendly error message
       const message = getUserFriendlyErrorMessage(err);
 
       notification.error({
@@ -158,7 +150,6 @@ export default function BookingsPage() {
 
       await loadBookings();
     } catch (err) {
-      // ✅ User-friendly error message
       const message = getUserFriendlyErrorMessage(err);
 
       notification.error({
@@ -211,35 +202,9 @@ export default function BookingsPage() {
         {/* Bookings Table */}
         <Card sx={{ borderRadius: 3, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
           <CardContent>
-            <Stack
-              direction="row"
-              spacing={2}
-              sx={{
-                mb: 2,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}
-            >
-              <Typography variant="h6" sx={{ fontWeight: 600, color: "#2C3E50" }}>
-                📋 All Bookings
-              </Typography>
-              <Button
-                variant="contained"
-                onClick={() => void loadBookings()}
-                sx={{
-                  backgroundColor: "#1976D2",
-                  borderRadius: 2,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  "&:hover": {
-                    backgroundColor: "#1565C0"
-                  }
-                }}
-              >
-                🔄 Refresh
-              </Button>
-            </Stack>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: "#2C3E50" }}>
+              📋 All Bookings
+            </Typography>
 
             <BookingTable
               bookings={bookings}

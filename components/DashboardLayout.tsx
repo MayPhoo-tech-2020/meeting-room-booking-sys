@@ -68,8 +68,10 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const data = localStorage.getItem("currentUser");
     if (data) {
       setUser(JSON.parse(data));
@@ -96,11 +98,11 @@ export default function DashboardLayout({
   const getRoleColor = (role: string) => {
     switch (role) {
       case "ADMIN":
-        return "#E74C3C"; // Red
+        return "#E74C3C";
       case "OWNER":
-        return "#F39C12"; // Yellow/Orange
+        return "#F39C12";
       case "USER":
-        return "#3498DB"; // Blue
+        return "#3498DB";
       default:
         return "#95A5A6";
     }
@@ -125,7 +127,7 @@ export default function DashboardLayout({
     return false;
   });
 
-  if (loading) {
+  if (!isClient || loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
         <CircularProgress />

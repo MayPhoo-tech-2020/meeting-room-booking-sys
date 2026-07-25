@@ -8,7 +8,6 @@ import { useState, useEffect, useMemo } from "react";
 import type { Booking } from "../types/booking";
 
 const { confirm } = Modal;
-const { Panel } = Collapse;
 
 interface BookingTableProps {
   bookings: Booking[];
@@ -24,7 +23,6 @@ const getUserFriendlyErrorMessage = (err: any): string => {
   const errorMessage = errorData?.error || errorData?.message || err?.message || "";
   const status = err?.response?.status;
 
-  // Booking errors
   if (errorMessage.toLowerCase().includes("not found")) {
     return "🔍 This booking has already been deleted or doesn't exist.";
   }
@@ -37,14 +35,12 @@ const getUserFriendlyErrorMessage = (err: any): string => {
     return "🔒 You can only delete your own bookings.";
   }
 
-  // Status code based messages
   if (status === 400) return "⚠️ Please check your input and try again.";
   if (status === 401) return "🔒 Please login to continue.";
   if (status === 403) return "🔒 You don't have permission to do this.";
   if (status === 404) return "🔍 The booking you're looking for could not be found.";
   if (status === 500) return "❌ Something went wrong on our end. Please try again later.";
 
-  // Default fallback
   return "❌ Something went wrong. Please try again or contact support if the issue persists.";
 };
 
@@ -115,13 +111,11 @@ export default function BookingTable({
         setDeletingId(id);
         try {
           await onDelete(id);
-          // ✅ Success notification
           notification.success({
             message: "✅ Booking Deleted",
             description: "The booking has been successfully removed.",
           });
         } catch (err: any) {
-          // ✅ User-friendly error notification
           notification.error({
             message: "❌ Delete Failed",
             description: getUserFriendlyErrorMessage(err),
@@ -218,6 +212,103 @@ export default function BookingTable({
     }
   ];
 
+  // Build collapse items
+  const collapseItems = summaryStats.bookingsByUser.map((item, index) => ({
+    key: index,
+    label: (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              backgroundColor: getRoleColor(item.user?.role || "USER"),
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#FFFFFF",
+              fontWeight: 600,
+              fontSize: 14
+            }}
+          >
+            {item.user?.name?.charAt(0)?.toUpperCase() || "U"}
+          </div>
+          <div>
+            <div style={{ fontWeight: 600, color: "#1F2937" }}>
+              {item.user?.name || "Unknown User"}
+            </div>
+            <div style={{ fontSize: 12, color: "#6B7280" }}>
+              {item.user?.email || "-"} • {item.bookings.length} booking{item.bookings.length !== 1 ? "s" : ""}
+            </div>
+          </div>
+        </div>
+        <Tag color={getRoleColor(item.user?.role || "USER")}>
+          {item.user?.role || "USER"}
+        </Tag>
+      </div>
+    ),
+    children: (
+      <Table
+        rowKey="id"
+        columns={[
+          {
+            title: "Start Time",
+            dataIndex: "startTime",
+            render: (value: string | Date) =>
+              isMounted ? new Date(value).toLocaleString() : "-"
+          },
+          {
+            title: "End Time",
+            dataIndex: "endTime",
+            render: (value: string | Date) =>
+              isMounted ? new Date(value).toLocaleString() : "-"
+          },
+          {
+            title: "Actions",
+            key: "actions",
+            align: "center",
+            render: (_: unknown, record: Booking) =>
+              canDelete(record) ? (
+                <Button
+                  danger
+                  size="small"
+                  loading={deletingId === record.id}
+                  disabled={deletingId === record.id}
+                  onClick={() => handleDelete(record.id)}
+                  style={{
+                    borderRadius: "4px",
+                    fontWeight: 500,
+                    fontSize: "12px",
+                    border: "1px solid #FF4D4F",
+                    color: "#FF4D4F",
+                    backgroundColor: "transparent"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#FF4D4F";
+                    e.currentTarget.style.color = "#FFFFFF";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                    e.currentTarget.style.color = "#FF4D4F";
+                  }}
+                >
+                  Delete
+                </Button>
+              ) : (
+                <span className="text-gray-400 text-sm font-medium">
+                  No permission
+                </span>
+              )
+          }
+        ]}
+        dataSource={item.bookings}
+        pagination={false}
+        size="small"
+      />
+    )
+  }));
+
   return (
     <div>
       {/* Summary Cards - Only for ADMIN and OWNER */}
@@ -233,7 +324,9 @@ export default function BookingTable({
                   title="Total Bookings"
                   value={summaryStats.total}
                   prefix={<CalendarOutlined style={{ color: "#1976D2" }} />}
-                  valueStyle={{ color: "#1976D2" }}
+                  styles={{
+                    content: { color: "#1976D2" }
+                  }}
                 />
               </Card>
             </Col>
@@ -246,7 +339,9 @@ export default function BookingTable({
                   title="Total Users"
                   value={summaryStats.totalUsers}
                   prefix={<UserOutlined style={{ color: "#F39C12" }} />}
-                  valueStyle={{ color: "#F39C12" }}
+                  styles={{
+                    content: { color: "#F39C12" }
+                  }}
                 />
               </Card>
             </Col>
@@ -259,7 +354,9 @@ export default function BookingTable({
                   title="Avg Bookings per User"
                   value={summaryStats.totalUsers > 0 ? (summaryStats.total / summaryStats.totalUsers).toFixed(1) : 0}
                   prefix={<ClockCircleOutlined style={{ color: "#1976D2" }} />}
-                  valueStyle={{ color: "#1976D2" }}
+                  styles={{
+                    content: { color: "#1976D2" }
+                  }}
                 />
               </Card>
             </Col>
@@ -276,104 +373,7 @@ export default function BookingTable({
                 No bookings found
               </div>
             ) : (
-              <Collapse accordion>
-                {summaryStats.bookingsByUser.map((item, index) => (
-                  <Panel
-                    header={
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <div
-                            style={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: "50%",
-                              backgroundColor: getRoleColor(item.user?.role || "USER"),
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: "#FFFFFF",
-                              fontWeight: 600,
-                              fontSize: 14
-                            }}
-                          >
-                            {item.user?.name?.charAt(0)?.toUpperCase() || "U"}
-                          </div>
-                          <div>
-                            <div style={{ fontWeight: 600, color: "#1F2937" }}>
-                              {item.user?.name || "Unknown User"}
-                            </div>
-                            <div style={{ fontSize: 12, color: "#6B7280" }}>
-                              {item.user?.email || "-"} • {item.bookings.length} booking{item.bookings.length !== 1 ? "s" : ""}
-                            </div>
-                          </div>
-                        </div>
-                        <Tag color={getRoleColor(item.user?.role || "USER")}>
-                          {item.user?.role || "USER"}
-                        </Tag>
-                      </div>
-                    }
-                    key={index}
-                  >
-                    <Table
-                      rowKey="id"
-                      columns={[
-                        {
-                          title: "Start Time",
-                          dataIndex: "startTime",
-                          render: (value: string | Date) =>
-                            isMounted ? new Date(value).toLocaleString() : "-"
-                        },
-                        {
-                          title: "End Time",
-                          dataIndex: "endTime",
-                          render: (value: string | Date) =>
-                            isMounted ? new Date(value).toLocaleString() : "-"
-                        },
-                        {
-                          title: "Actions",
-                          key: "actions",
-                          align: "center",
-                          render: (_: unknown, record: Booking) =>
-                            canDelete(record) ? (
-                              <Button
-                                danger
-                                size="small"
-                                loading={deletingId === record.id}
-                                disabled={deletingId === record.id}
-                                onClick={() => handleDelete(record.id)}
-                                style={{
-                                  borderRadius: "4px",
-                                  fontWeight: 500,
-                                  fontSize: "12px",
-                                  border: "1px solid #FF4D4F",
-                                  color: "#FF4D4F",
-                                  backgroundColor: "transparent"
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = "#FF4D4F";
-                                  e.currentTarget.style.color = "#FFFFFF";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = "transparent";
-                                  e.currentTarget.style.color = "#FF4D4F";
-                                }}
-                              >
-                                Delete
-                              </Button>
-                            ) : (
-                              <span className="text-gray-400 text-sm font-medium">
-                                No permission
-                              </span>
-                            )
-                        }
-                      ]}
-                      dataSource={item.bookings}
-                      pagination={false}
-                      size="small"
-                    />
-                  </Panel>
-                ))}
-              </Collapse>
+              <Collapse accordion items={collapseItems} />
             )}
           </Card>
         </div>
