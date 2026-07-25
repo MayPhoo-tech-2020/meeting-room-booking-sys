@@ -8,6 +8,8 @@ import {
   Stack,
 } from "@mui/material";
 
+import axios from "axios";
+
 import { notification } from "antd";
 
 import { useEffect, useState } from "react";
@@ -42,6 +44,8 @@ type CurrentUser = {
 
 
 
+
+
 export default function BookingsPage() {
 
 
@@ -65,20 +69,26 @@ export default function BookingsPage() {
 
 
 
+
   const loadBookings = async()=>{
 
+
     try{
+
 
       setLoading(true);
 
       setError(null);
 
 
+
       const data =
         await getBookings();
 
 
+
       setBookings(data);
+
 
 
     }catch(err){
@@ -90,23 +100,29 @@ export default function BookingsPage() {
         : "Failed to load bookings";
 
 
+
       setError(message);
+
 
 
       notification.error({
 
-        message:"Failed to load bookings",
+        title:"Failed to load bookings",
 
         description:message,
 
       });
 
 
+
     }finally{
+
 
       setLoading(false);
 
+
     }
+
 
   };
 
@@ -127,16 +143,21 @@ export default function BookingsPage() {
       );
 
 
+
     if(storedUser){
+
 
       setUser(
         JSON.parse(storedUser)
       );
 
+
     }
 
 
+
     void loadBookings();
+
 
 
   },[]);
@@ -174,22 +195,28 @@ export default function BookingsPage() {
 
       await createBooking({
 
+
         userId:user.id,
 
         startTime:values.startTime,
 
         endTime:values.endTime,
 
+
       });
+
 
 
 
 
       notification.success({
 
-        message:"Booking created",
+
+        title:"Booking created",
+
 
       });
+
 
 
 
@@ -199,23 +226,59 @@ export default function BookingsPage() {
 
 
 
+
     }catch(err){
 
 
+
       const message =
+
+        axios.isAxiosError(err)
+
+        ?
+
+        (
+
+          err.response?.data?.error
+
+          ??
+
+          err.response?.data?.message
+
+          ??
+
+          err.message
+
+        )
+
+        :
+
         err instanceof Error
-        ? err.message
-        :"Failed to create booking";
+
+        ?
+
+        err.message
+
+        :
+
+        "Failed to create booking";
+
+
+
 
 
 
       notification.error({
 
-        message:"Failed to create booking",
+
+        title:"Failed to create booking",
+
 
         description:message,
 
+
       });
+
 
 
     }
@@ -241,11 +304,15 @@ export default function BookingsPage() {
 
 
 
+
       notification.success({
 
-        message:"Booking deleted",
+
+        title:"Booking deleted",
+
 
       });
+
 
 
 
@@ -253,23 +320,37 @@ export default function BookingsPage() {
 
 
 
+
     }catch(err){
 
 
+
       const message =
+
         err instanceof Error
-        ? err.message
-        :"Failed to delete booking";
+
+        ?
+
+        err.message
+
+        :
+
+        "Failed to delete booking";
+
 
 
 
       notification.error({
 
-        message:"Failed to delete booking",
+
+        title:"Failed to delete booking",
+
 
         description:message,
 
+
       });
+
 
 
     }
@@ -324,7 +405,6 @@ export default function BookingsPage() {
 
 
         {
-
           error && (
 
             <Alert severity="error">
@@ -334,7 +414,6 @@ export default function BookingsPage() {
             </Alert>
 
           )
-
         }
 
 
@@ -369,10 +448,12 @@ export default function BookingsPage() {
 
 
 
+
         <Card>
 
 
           <CardContent>
+
 
 
             <Stack
@@ -381,11 +462,10 @@ export default function BookingsPage() {
 
               spacing={2}
 
-              sx={{
-                mb:2
-              }}
+              sx={{mb:2}}
 
             >
+
 
 
               <Button
@@ -402,7 +482,10 @@ export default function BookingsPage() {
               </Button>
 
 
+
             </Stack>
+
+
 
 
 
@@ -429,6 +512,7 @@ export default function BookingsPage() {
 
 
             />
+
 
 
 

@@ -103,7 +103,7 @@ export default function UsersPage(){
 
       notification.error({
 
-        message:"Failed to load users",
+        title:"Failed to load users",
 
         description:message,
 
@@ -205,7 +205,7 @@ export default function UsersPage(){
 
       notification.success({
 
-        message:"User created",
+        title:"User created",
 
       });
 
@@ -227,7 +227,7 @@ export default function UsersPage(){
 
       notification.error({
 
-        message:"Failed to create user",
+        title:"Failed to create user",
 
         description:message,
 
@@ -259,7 +259,7 @@ export default function UsersPage(){
 
       notification.success({
 
-        message:"User deleted",
+        title:"User deleted",
 
       });
 
@@ -281,7 +281,7 @@ export default function UsersPage(){
 
       notification.error({
 
-        message:"Failed to delete user",
+        title:"Failed to delete user",
 
         description:message,
 
@@ -319,7 +319,7 @@ export default function UsersPage(){
 
       notification.success({
 
-        message:"Role updated",
+        title:"Role updated",
 
       });
 
@@ -341,7 +341,7 @@ export default function UsersPage(){
 
       notification.error({
 
-        message:"Failed to update role",
+        title:"Failed to update role",
 
         description:message,
 
