@@ -167,11 +167,12 @@ export default function UserTable({
     setChangingRoleId(id);
     try {
       await onRoleChange(id, role);
-      // ✅ Success notification for role change
-      notification.success({
-        message: "✅ Role Updated",
-        description: `User role has been successfully changed to ${role}.`,
-      });
+      // ✅ Success notification - REMOVED to avoid duplicate
+      // The parent component will handle the notification
+      // notification.success({
+      //   message: "✅ Role Updated",
+      //   description: `User role has been successfully changed to ${role}.`,
+      // });
     } catch (err: any) {
       // ✅ User-friendly error notification for role change
       notification.error({
