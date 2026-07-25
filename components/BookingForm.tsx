@@ -38,6 +38,10 @@ const getUserFriendlyErrorMessage = (err: any): string => {
     return "⏰ The start time must be before the end time. Please adjust your booking times.";
   }
 
+  if (errorMessage.toLowerCase().includes("cannot book in the past")) {
+    return "⏰ Cannot book in the past. Please select a future time.";
+  }
+
   if (errorMessage.toLowerCase().includes("required")) {
     return "⚠️ Please fill in all required fields before submitting.";
   }
@@ -102,8 +106,86 @@ export default function BookingForm({
     }
   };
 
+  // ✅ Disable past dates
   const disabledDate = (current: dayjs.Dayjs) => {
     return current && current < dayjs().startOf("day");
+  };
+
+  // ✅ Disable past hours/minutes on the current day
+  const disabledTime = (currentDate: dayjs.Dayjs | null) => {
+    if (!currentDate) {
+      return {};
+    }
+
+    const now = dayjs();
+    const isToday = currentDate.isSame(now, 'day');
+
+    if (isToday) {
+      const currentHour = now.hour();
+      const currentMinute = now.minute();
+
+      return {
+        disabledHours: () => {
+          const hours = [];
+          for (let i = 0; i < currentHour; i++) {
+            hours.push(i);
+          }
+          return hours;
+        },
+        disabledMinutes: (selectedHour: number) => {
+          if (selectedHour === currentHour) {
+            const minutes = [];
+            for (let i = 0; i <= currentMinute; i++) {
+              minutes.push(i);
+            }
+            return minutes;
+          }
+          return [];
+        },
+      };
+    }
+
+    return {};
+  };
+
+  // ✅ Custom validator to ensure start time is in the future
+  const validateStartTime = (_: any, value: dayjs.Dayjs) => {
+    if (!value) {
+      return Promise.reject(new Error('Please select a start time'));
+    }
+
+    const now = dayjs();
+    // Allow booking exactly at current time (within same minute)
+    if (value.isBefore(now)) {
+      return Promise.reject(new Error('Start time must be in the future'));
+    }
+
+    return Promise.resolve();
+  };
+
+  // ✅ Validate that end time is after start time
+  const validateEndTime = (_: any, value: dayjs.Dayjs) => {
+    if (!value) {
+      return Promise.reject(new Error('Please select an end time'));
+    }
+
+    const start = form.getFieldValue('startTime');
+    if (!start) {
+      return Promise.reject(new Error('Please select a start time first'));
+    }
+
+    // End time must be at least 1 minute after start time
+    if (!value.isAfter(start)) {
+      return Promise.reject(new Error('End time must be after start time'));
+    }
+
+    // End time must be in the future (if start is in the future, end will be too)
+    const now = dayjs();
+    if (value.isBefore(now)) {
+      return Promise.reject(new Error('End time must be in the future'));
+    }
+
+    return Promise.resolve();
   };
 
   return (
@@ -156,14 +238,21 @@ export default function BookingForm({
             {
               required: true,
               message: "Please select a start time"
+            },
+            {
+              validator: validateStartTime
             }
           ]}
           className="mb-3"
         >
           <DatePicker
-            showTime={{ format: "HH:mm" }}
+            showTime={{ 
+              format: "HH:mm",
+              defaultValue: dayjs().startOf('hour').add(1, 'hour')
+            }}
             format="YYYY-MM-DD HH:mm"
             disabledDate={disabledDate}
+            disabledTime={disabledTime}
             placeholder="Select start time"
             className="w-full rounded-lg border-gray-200 hover:border-blue-400 focus:border-blue-500 h-10"
             suffixIcon={<ClockCircleOutlined className="text-gray-400" />}
@@ -185,29 +274,68 @@ export default function BookingForm({
               required: true,
               message: "Please select an end time"
             },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                const start = getFieldValue("startTime");
-
-                if (!start || !value) {
-                  return Promise.resolve();
-                }
-
-                if (dayjs(value).isAfter(dayjs(start))) {
-                  return Promise.resolve();
-                }
-
-                return Promise.reject(
-                  new Error("End time must be after start time")
-                );
-              }
-            })
+            {
+              validator: validateEndTime
+            }
           ]}
           className="mb-4"
         >
           <DatePicker
-            showTime={{ format: "HH:mm" }}
+            showTime={{ 
+              format: "HH:mm",
+              defaultValue: dayjs().startOf('hour').add(2, 'hour')
+            }}
             format="YYYY-MM-DD HH:mm"
+            disabledDate={disabledDate}
+            disabledTime={(currentDate) => {
+              const start = form.getFieldValue('startTime');
+              if (!start) {
+                return disabledTime(currentDate);
+              }
+              
+              // If start is set, disable times before start + 1 minute
+              const now = dayjs();
+              const isToday = currentDate?.isSame(now, 'day');
+              
+              const baseDisabled = disabledTime(currentDate) || {};
+              
+              // Add additional constraint to ensure end > start
+              if (currentDate && start) {
+                const startDate = dayjs(start);
+                const isSameDay = currentDate.isSame(startDate, 'day');
+                
+                if (isSameDay) {
+                  const startHour = startDate.hour();
+                  const startMinute = startDate.minute();
+                  
+                  return {
+                    ...baseDisabled,
+                    disabledHours: () => {
+                      const hours = baseDisabled.disabledHours?.() || [];
+                      for (let i = 0; i <= startHour; i++) {
+                        if (!hours.includes(i)) {
+                          hours.push(i);
+                        }
+                      }
+                      return hours;
+                    },
+                    disabledMinutes: (selectedHour: number) => {
+                      const minutes = baseDisabled.disabledMinutes?.(selectedHour) || [];
+                      if (selectedHour === startHour) {
+                        for (let i = 0; i <= startMinute; i++) {
+                          if (!minutes.includes(i)) {
+                            minutes.push(i);
+                          }
+                        }
+                      }
+                      return minutes;
+                    },
+                  };
+                }
+              }
+              
+              return baseDisabled;
+            }}
             placeholder="Select end time"
             className="w-full rounded-lg border-gray-200 hover:border-blue-400 focus:border-blue-500 h-10"
             suffixIcon={<ClockCircleOutlined className="text-gray-400" />}

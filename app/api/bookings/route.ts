@@ -1,3 +1,4 @@
+// app/api/bookings/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { userId, startTime, endTime } = body;
 
+    // ✅ 1. Required fields validation
     if (!userId || !startTime || !endTime) {
       return NextResponse.json(
         {
@@ -61,7 +63,20 @@ export async function POST(req: NextRequest) {
     const start = new Date(startTime);
     const end = new Date(endTime);
 
-    // Rule 1: startTime must be before endTime
+    // ✅ 2. Validate dates are valid
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid date format",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    // ✅ 3. Rule 1: startTime must be before endTime
     if (start >= end) {
       return NextResponse.json(
         {
@@ -74,8 +89,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Rule 2 & 3: Prevent overlapping bookings for SINGLE ROOM
-    // ❌ NO userId filter - checking ALL bookings (single room)
+    // ✅ 4. SECURITY: Prevent booking in the past
+    const now = new Date();
+    if (start < now) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Cannot book in the past. Please select a future time.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    // ✅ 5. Verify user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    // ✅ 6. Rules 2 & 3: Prevent overlapping bookings (single room)
+    // Overlap detection logic:
+    // - Identical ranges: start < end and end > start
+    // - Partial overlaps: start < end and end > start
+    // - One range fully inside another: start < end and end > start
+    // - Back-to-back: start = end or end = start (allowed, no overlap)
     const conflict = await prisma.booking.findFirst({
       where: {
         startTime: {
@@ -105,15 +154,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ✅ Create booking WITHOUT status field
-    const bookingData = {
-      userId,
-      startTime: start,
-      endTime: end,
-    };
-
+    // ✅ 7. Create booking
     const booking = await prisma.booking.create({
-      data: bookingData,
+      data: {
+        userId,
+        startTime: start,
+        endTime: end,
+      },
       include: {
         user: true,
       },
