@@ -64,15 +64,35 @@ export default function UserTable({
     }
   };
 
-  const handleDelete = (id: string, userName: string) => {
+  const handleDelete = (id: string, userName: string, bookingCount: number) => {
     // Prevent double clicks
     if (deletingId === id) return;
+
+    const hasBookings = bookingCount > 0;
 
     confirm({
       title: "Delete User",
       icon: <ExclamationCircleOutlined />,
-      content: `Are you sure you want to delete user "${userName}"? This will also delete all their bookings.`,
-      okText: "Yes, Delete",
+      content: (
+        <div>
+          <p style={{ marginBottom: 8 }}>
+            Are you sure you want to delete user <strong>"{userName}"</strong>?
+          </p>
+          {hasBookings ? (
+            <p style={{ color: "#E74C3C", marginBottom: 4 }}>
+              ⚠️ This will also delete <strong>{bookingCount}</strong> booking{bookingCount !== 1 ? "s" : ""} associated with this user.
+            </p>
+          ) : (
+            <p style={{ color: "#6B7280", marginBottom: 4 }}>
+              ℹ️ This user has no bookings.
+            </p>
+          )}
+          <p style={{ color: "#6B7280", fontSize: "0.875rem", marginTop: 4 }}>
+            ⚠️ This action cannot be undone.
+          </p>
+        </div>
+      ),
+      okText: hasBookings ? "Yes, Delete User & Bookings" : "Yes, Delete User",
       okType: "danger",
       cancelText: "Cancel",
       onOk: async () => {
@@ -166,48 +186,52 @@ export default function UserTable({
             title: "Actions",
             key: "actions",
             width: 260,
-            render: (_: unknown, record: User) => (
-              <div className="flex gap-2 items-center">
-                <Select
-                  value={record.role}
-                  options={roleOptions}
-                  style={{
-                    width: 120,
-                    borderRadius: "6px"
-                  }}
-                  onChange={(value) =>
-                    handleRoleChange(record.id, value as User["role"])
-                  }
-                  disabled={changingRoleId === record.id}
-                  loading={changingRoleId === record.id}
-                />
-                <Button
-                  danger
-                  loading={deletingId === record.id}
-                  disabled={deletingId === record.id}
-                  onClick={() => handleDelete(record.id, record.name)}
-                  style={{
-                    borderRadius: "6px",
-                    fontWeight: 500,
-                    fontSize: "13px",
-                    border: "1px solid #FF4D4F",
-                    color: "#FF4D4F",
-                    backgroundColor: "transparent",
-                    transition: "all 0.3s ease"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#FF4D4F";
-                    e.currentTarget.style.color = "#FFFFFF";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "#FF4D4F";
-                  }}
-                >
-                  {deletingId === record.id ? "Deleting..." : "Delete"}
-                </Button>
-              </div>
-            )
+            render: (_: unknown, record: User) => {
+              const bookingCount = record._count?.bookings || 0;
+              return (
+                <div className="flex gap-2 items-center">
+                  <Select
+                    value={record.role}
+                    options={roleOptions}
+                    style={{
+                      width: 110,
+                      borderRadius: "6px"
+                    }}
+                    onChange={(value) =>
+                      handleRoleChange(record.id, value as User["role"])
+                    }
+                    disabled={changingRoleId === record.id}
+                    loading={changingRoleId === record.id}
+                  />
+                  <Button
+                    danger
+                    size="small"
+                    loading={deletingId === record.id}
+                    disabled={deletingId === record.id}
+                    onClick={() => handleDelete(record.id, record.name, bookingCount)}
+                    style={{
+                      borderRadius: "6px",
+                      fontWeight: 500,
+                      fontSize: "12px",
+                      border: "1px solid #FF4D4F",
+                      color: "#FF4D4F",
+                      backgroundColor: "transparent",
+                      transition: "all 0.3s ease"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#FF4D4F";
+                      e.currentTarget.style.color = "#FFFFFF";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                      e.currentTarget.style.color = "#FF4D4F";
+                    }}
+                  >
+                    {deletingId === record.id ? "Deleting..." : "Delete"}
+                  </Button>
+                </div>
+              );
+            }
           }
         ]
       : [])

@@ -1,13 +1,14 @@
 "use client";
 
-import { Button, Table, Tag, Spin, Modal } from "antd";
+import { Button, Table, Tag, Spin, Modal, Card, Row, Col, Statistic, Collapse } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
-import { useState, useEffect } from "react";
+import { ExclamationCircleOutlined, UserOutlined, CalendarOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import { useState, useEffect, useMemo } from "react";
 
 import type { Booking } from "../types/booking";
 
 const { confirm } = Modal;
+const { Panel } = Collapse;
 
 interface BookingTableProps {
   bookings: Booking[];
@@ -31,6 +32,33 @@ export default function BookingTable({
     setIsMounted(true);
   }, []);
 
+  // Calculate summary statistics
+  const summaryStats = useMemo(() => {
+    const total = bookings.length;
+
+    // Group bookings by user
+    const bookingsByUser: { [key: string]: { user: any; bookings: Booking[] } } = {};
+    bookings.forEach(booking => {
+      const userId = booking.user?.id || "unknown";
+      if (!bookingsByUser[userId]) {
+        bookingsByUser[userId] = {
+          user: booking.user || { name: "Unknown User", email: "-" },
+          bookings: []
+        };
+      }
+      bookingsByUser[userId].bookings.push(booking);
+    });
+
+    // Sort users by booking count (descending)
+    const sortedUsers = Object.values(bookingsByUser).sort((a, b) => b.bookings.length - a.bookings.length);
+
+    return {
+      total,
+      bookingsByUser: sortedUsers,
+      totalUsers: sortedUsers.length
+    };
+  }, [bookings]);
+
   const canDelete = (booking: Booking) => {
     if (currentRole === "ADMIN" || currentRole === "OWNER") {
       return true;
@@ -43,8 +71,7 @@ export default function BookingTable({
     return false;
   };
 
-  const handleDelete = (id: string, bookingName: string) => {
-    // Prevent double clicks
+  const handleDelete = (id: string) => {
     if (deletingId === id) return;
 
     confirm({
@@ -62,35 +89,20 @@ export default function BookingTable({
           setDeletingId(null);
         }
       },
-      onCancel: () => {
-        // Do nothing
-      }
+      onCancel: () => {}
     });
   };
 
-  const getStatusColor = (value: string) => {
-    switch (value) {
-      case "APPROVED":
-        return "#52C41A";
-      case "REJECTED":
-        return "#FF4D4F";
-      case "PENDING":
-        return "#FAAD14";
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case "ADMIN":
+        return "#E74C3C";
+      case "OWNER":
+        return "#F39C12";
+      case "USER":
+        return "#3498DB";
       default:
-        return "#8C8C8C";
-    }
-  };
-
-  const getStatusBgColor = (value: string) => {
-    switch (value) {
-      case "APPROVED":
-        return "#F6FFED";
-      case "REJECTED":
-        return "#FFF1F0";
-      case "PENDING":
-        return "#FFFBE6";
-      default:
-        return "#F5F5F5";
+        return "#95A5A6";
     }
   };
 
@@ -111,37 +123,17 @@ export default function BookingTable({
       )
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      width: 120,
-      render: (value: string) => (
-        <Tag
-          color={getStatusColor(value)}
-          style={{
-            backgroundColor: getStatusBgColor(value),
-            border: `1px solid ${getStatusColor(value)}`,
-            color: getStatusColor(value),
-            fontWeight: 500,
-            borderRadius: "4px",
-            padding: "2px 12px"
-          }}
-        >
-          {value}
-        </Tag>
-      )
-    },
-    {
       title: "Start Time",
       dataIndex: "startTime",
       width: 180,
-      render: (value: string) =>
+      render: (value: string | Date) =>
         isMounted ? new Date(value).toLocaleString() : "-"
     },
     {
       title: "End Time",
       dataIndex: "endTime",
       width: 180,
-      render: (value: string) =>
+      render: (value: string | Date) =>
         isMounted ? new Date(value).toLocaleString() : "-"
     },
     {
@@ -156,7 +148,7 @@ export default function BookingTable({
             size="middle"
             loading={deletingId === record.id}
             disabled={deletingId === record.id}
-            onClick={() => handleDelete(record.id, record.user?.name || "Booking")}
+            onClick={() => handleDelete(record.id)}
             style={{
               borderRadius: "6px",
               fontWeight: 500,
@@ -186,85 +178,260 @@ export default function BookingTable({
   ];
 
   return (
-    <div className="relative">
-      {/* Loading Overlay */}
-      {loading && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(255, 255, 255, 0.7)",
-            zIndex: 10,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: "8px"
-          }}
-        >
-          <Spin size="large" description="Loading..." />
+    <div>
+      {/* Summary Cards - Only for ADMIN and OWNER */}
+      {(currentRole === "ADMIN" || currentRole === "OWNER") && (
+        <div style={{ marginBottom: 24 }}>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Card 
+                variant="borderless" 
+                style={{ borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+              >
+                <Statistic
+                  title="Total Bookings"
+                  value={summaryStats.total}
+                  prefix={<CalendarOutlined style={{ color: "#1976D2" }} />}
+                  valueStyle={{ color: "#1976D2" }}
+                />
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card 
+                variant="borderless" 
+                style={{ borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+              >
+                <Statistic
+                  title="Total Users"
+                  value={summaryStats.totalUsers}
+                  prefix={<UserOutlined style={{ color: "#F39C12" }} />}
+                  valueStyle={{ color: "#F39C12" }}
+                />
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card 
+                variant="borderless" 
+                style={{ borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+              >
+                <Statistic
+                  title="Avg Bookings per User"
+                  value={summaryStats.totalUsers > 0 ? (summaryStats.total / summaryStats.totalUsers).toFixed(1) : 0}
+                  prefix={<ClockCircleOutlined style={{ color: "#1976D2" }} />}
+                  valueStyle={{ color: "#1976D2" }}
+                />
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Bookings Grouped by User - Only for ADMIN and OWNER */}
+          <Card
+            title="Bookings by User"
+            variant="borderless"
+            style={{ borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", marginTop: 16 }}
+          >
+            {summaryStats.bookingsByUser.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "20px", color: "#9CA3AF" }}>
+                No bookings found
+              </div>
+            ) : (
+              <Collapse accordion>
+                {summaryStats.bookingsByUser.map((item, index) => (
+                  <Panel
+                    header={
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: "50%",
+                              backgroundColor: getRoleColor(item.user?.role || "USER"),
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#FFFFFF",
+                              fontWeight: 600,
+                              fontSize: 14
+                            }}
+                          >
+                            {item.user?.name?.charAt(0)?.toUpperCase() || "U"}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: "#1F2937" }}>
+                              {item.user?.name || "Unknown User"}
+                            </div>
+                            <div style={{ fontSize: 12, color: "#6B7280" }}>
+                              {item.user?.email || "-"} • {item.bookings.length} booking{item.bookings.length !== 1 ? "s" : ""}
+                            </div>
+                          </div>
+                        </div>
+                        <Tag color={getRoleColor(item.user?.role || "USER")}>
+                          {item.user?.role || "USER"}
+                        </Tag>
+                      </div>
+                    }
+                    key={index}
+                  >
+                    <Table
+                      rowKey="id"
+                      columns={[
+                        {
+                          title: "Start Time",
+                          dataIndex: "startTime",
+                          render: (value: string | Date) =>
+                            isMounted ? new Date(value).toLocaleString() : "-"
+                        },
+                        {
+                          title: "End Time",
+                          dataIndex: "endTime",
+                          render: (value: string | Date) =>
+                            isMounted ? new Date(value).toLocaleString() : "-"
+                        },
+                        {
+                          title: "Actions",
+                          key: "actions",
+                          align: "center",
+                          render: (_: unknown, record: Booking) =>
+                            canDelete(record) ? (
+                              <Button
+                                danger
+                                size="small"
+                                loading={deletingId === record.id}
+                                disabled={deletingId === record.id}
+                                onClick={() => handleDelete(record.id)}
+                                style={{
+                                  borderRadius: "4px",
+                                  fontWeight: 500,
+                                  fontSize: "12px",
+                                  border: "1px solid #FF4D4F",
+                                  color: "#FF4D4F",
+                                  backgroundColor: "transparent"
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = "#FF4D4F";
+                                  e.currentTarget.style.color = "#FFFFFF";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = "transparent";
+                                  e.currentTarget.style.color = "#FF4D4F";
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            ) : (
+                              <span className="text-gray-400 text-sm font-medium">
+                                No permission
+                              </span>
+                            )
+                        }
+                      ]}
+                      dataSource={item.bookings}
+                      pagination={false}
+                      size="small"
+                    />
+                  </Panel>
+                ))}
+              </Collapse>
+            )}
+          </Card>
         </div>
       )}
 
-      <Table
-        rowKey="id"
-        columns={columns}
-        dataSource={bookings}
-        loading={loading}
-        pagination={{
-          pageSize: 5,
-          showSizeChanger: false,
-          style: {
-            marginTop: "16px"
-          }
-        }}
-        bordered={false}
-        className="custom-table"
-        style={{
-          backgroundColor: "#FFFFFF",
-          borderRadius: "8px",
-          overflow: "hidden"
-        }}
-        rowClassName={(_, index) =>
-          index % 2 === 0 ? "table-row-even" : "table-row-odd"
-        }
-      />
+      {/* All Bookings Table */}
+      <div className="relative">
+        {loading && (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(255, 255, 255, 0.7)",
+              zIndex: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "8px"
+            }}
+          >
+            <Spin size="large" description="Loading..." />
+          </div>
+        )}
 
-      {/* Add these styles in your global CSS or use styled-components */}
-      <style jsx>{`
-        :global(.custom-table .ant-table) {
-          border-radius: 8px;
-          overflow: hidden;
-        }
-        :global(.custom-table .ant-table-thead > tr > th) {
-          background: #F0F4F8 !important;
-          color: #2C3E50 !important;
-          font-weight: 600 !important;
-          font-size: 14px !important;
-          border-bottom: 2px solid #E8EDF2 !important;
-        }
-        :global(.custom-table .table-row-even) {
-          background: #FFFFFF !important;
-        }
-        :global(.custom-table .table-row-odd) {
-          background: #FAFBFC !important;
-        }
-        :global(.custom-table .ant-table-tbody > tr:hover > td) {
-          background: #E3F2FD !important;
-        }
-        :global(.custom-table .ant-table-tbody > tr > td) {
-          border-bottom: 1px solid #F0F4F8 !important;
-          padding: 12px 16px !important;
-        }
-        :global(.custom-table .ant-pagination-item-active) {
-          border-color: #1976D2 !important;
-        }
-        :global(.custom-table .ant-pagination-item-active a) {
-          color: #1976D2 !important;
-        }
-      `}</style>
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={bookings}
+          loading={loading}
+          pagination={{
+            pageSize: 5,
+            showSizeChanger: false,
+            style: {
+              marginTop: "16px"
+            }
+          }}
+          bordered={false}
+          className="custom-table"
+          style={{
+            backgroundColor: "#FFFFFF",
+            borderRadius: "8px",
+            overflow: "hidden"
+          }}
+          rowClassName={(_, index) =>
+            index % 2 === 0 ? "table-row-even" : "table-row-odd"
+          }
+        />
+
+        <style jsx>{`
+          :global(.custom-table .ant-table) {
+            border-radius: 8px;
+            overflow: hidden;
+          }
+          :global(.custom-table .ant-table-thead > tr > th) {
+            background: #F0F4F8 !important;
+            color: #2C3E50 !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            border-bottom: 2px solid #E8EDF2 !important;
+          }
+          :global(.custom-table .table-row-even) {
+            background: #FFFFFF !important;
+          }
+          :global(.custom-table .table-row-odd) {
+            background: #FAFBFC !important;
+          }
+          :global(.custom-table .ant-table-tbody > tr:hover > td) {
+            background: #E3F2FD !important;
+          }
+          :global(.custom-table .ant-table-tbody > tr > td) {
+            border-bottom: 1px solid #F0F4F8 !important;
+            padding: 12px 16px !important;
+          }
+          :global(.custom-table .ant-pagination-item-active) {
+            border-color: #1976D2 !important;
+          }
+          :global(.custom-table .ant-pagination-item-active a) {
+            color: #1976D2 !important;
+          }
+          :global(.ant-collapse) {
+            border-radius: 8px !important;
+            border: 1px solid #E8EDF2 !important;
+          }
+          :global(.ant-collapse-header) {
+            padding: 12px 16px !important;
+            display: flex !important;
+            align-items: center !important;
+          }
+          :global(.ant-collapse-header:hover) {
+            background: #F5F8FA !important;
+          }
+          :global(.ant-collapse-content-box) {
+            padding: 16px !important;
+          }
+        `}</style>
+      </div>
     </div>
   );
 }
