@@ -204,7 +204,7 @@ export default function BookingTable({
             borderRadius: "8px"
           }}
         >
-          <Spin size="large" tip="Loading..." />
+          <Spin size="large" description="Loading..." />
         </div>
       )}
 

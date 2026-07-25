@@ -292,6 +292,7 @@ export default function Home() {
                 {/* Dropdown Button */}
                 <Box sx={{ position: "relative", width: "100%" }}>
                   <Box
+                    id="user-select-button"
                     onClick={handleClick}
                     sx={{
                       width: "100%",
@@ -383,7 +384,7 @@ export default function Home() {
                     />
                   </Box>
 
-                  {/* Dropdown Menu */}
+                  {/* Dropdown Menu - Exact Width Match */}
                   <Menu
                     anchorEl={anchorEl}
                     open={open}
@@ -396,15 +397,18 @@ export default function Home() {
                       vertical: "top",
                       horizontal: "left",
                     }}
-                    sx={{
-                      "& .MuiPaper-root": {
-                        mt: 1,
-                        borderRadius: 3,
-                        boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
-                        maxHeight: 300,
-                        width: "100%",
-                        minWidth: { xs: "auto", sm: 400 },
-                        overflow: "auto"
+                    slotProps={{
+                      paper: {
+                        sx: {
+                          mt: 1,
+                          borderRadius: 3,
+                          boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+                          maxHeight: 300,
+                          minWidth: "auto",
+                          width: anchorEl ? anchorEl.offsetWidth : "auto",
+                          maxWidth: anchorEl ? anchorEl.offsetWidth : "auto",
+                          overflow: "auto"
+                        }
                       }
                     }}
                   >
@@ -446,9 +450,9 @@ export default function Home() {
                           >
                             {user.name.charAt(0).toUpperCase()}
                           </Avatar>
-                          <Box sx={{ flex: 1 }}>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                              <Typography sx={{ fontWeight: 600, color: "#1F2937" }}>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                              <Typography sx={{ fontWeight: 600, color: "#1F2937", fontSize: "0.9rem" }}>
                                 {user.name}
                               </Typography>
                               <Box
@@ -470,7 +474,7 @@ export default function Home() {
                             </Typography>
                           </Box>
                           {selectedUser?.id === user.id && (
-                            <CheckCircleIcon sx={{ color: "#1976D2", fontSize: 18 }} />
+                            <CheckCircleIcon sx={{ color: "#1976D2", fontSize: 18, flexShrink: 0 }} />
                           )}
                         </MenuItem>
                       ))

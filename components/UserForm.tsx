@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, Form, Input, Select, Space, Card, Alert } from "antd";
-import { UserOutlined, MailOutlined, SafetyOutlined, CrownOutlined, UserOutlined as UserIcon } from "@ant-design/icons";
+import { Button, Form, Input, Select, Space, Alert } from "antd";
+import { UserOutlined, MailOutlined, SafetyOutlined, CrownOutlined } from "@ant-design/icons";
 import { useState } from "react";
 
 interface UserFormProps {
@@ -19,17 +19,17 @@ const roleOptions = [
   {
     value: "ADMIN",
     label: "Admin",
-    icon: <SafetyOutlined style={{ color: "#E74C3C" }} />
+    icon: <SafetyOutlined className="text-red-500" />
   },
   {
     value: "OWNER",
     label: "Owner",
-    icon: <CrownOutlined style={{ color: "#F39C12" }} />
+    icon: <CrownOutlined className="text-orange-500" />
   },
   {
     value: "USER",
     label: "User",
-    icon: <UserIcon style={{ color: "#3498DB" }} />
+    icon: <UserOutlined className="text-blue-500" />
   },
 ];
 
@@ -73,78 +73,72 @@ export default function UserForm({
         />
       )}
 
-      {/* Name Field */}
-      <Form.Item
-        name="name"
-        label={
-          <Space>
-            <UserOutlined style={{ color: "#1976D2" }} />
-            <span style={{ fontWeight: 500 }}>Name</span>
-          </Space>
-        }
-        rules={[
-          {
-            required: true,
-            message: "Please enter a name"
-          },
-          {
-            min: 2,
-            message: "Name must be at least 2 characters"
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+        {/* Name Field */}
+        <Form.Item
+          name="name"
+          label={
+            <span className="text-sm font-medium text-gray-700">
+              <UserOutlined className="mr-1 text-blue-500" />
+              Name
+            </span>
           }
-        ]}
-      >
-        <Input
-          placeholder="Enter user's full name"
-          size="large"
-          prefix={<UserOutlined style={{ color: "#B0B8C4" }} />}
-          style={{
-            borderRadius: 8,
-            borderColor: "#D9D9D9",
-            height: 44
-          }}
-        />
-      </Form.Item>
+          rules={[
+            {
+              required: true,
+              message: "Please enter a name"
+            },
+            {
+              min: 2,
+              message: "Name must be at least 2 characters"
+            }
+          ]}
+          className="mb-3"
+        >
+          <Input
+            placeholder="Enter user's name"
+            prefix={<UserOutlined className="text-gray-400" />}
+            className="rounded-lg border-gray-200 hover:border-blue-400 focus:border-blue-500 h-10"
+          />
+        </Form.Item>
 
-      {/* Email Field */}
-      <Form.Item
-        name="email"
-        label={
-          <Space>
-            <MailOutlined style={{ color: "#1976D2" }} />
-            <span style={{ fontWeight: 500 }}>Email</span>
-          </Space>
-        }
-        rules={[
-          {
-            required: true,
-            message: "Please enter an email"
-          },
-          {
-            type: "email",
-            message: "Please enter a valid email"
+        {/* Email Field */}
+        <Form.Item
+          name="email"
+          label={
+            <span className="text-sm font-medium text-gray-700">
+              <MailOutlined className="mr-1 text-blue-500" />
+              Email
+            </span>
           }
-        ]}
-      >
-        <Input
-          placeholder="Enter user's email address"
-          size="large"
-          prefix={<MailOutlined style={{ color: "#B0B8C4" }} />}
-          style={{
-            borderRadius: 8,
-            borderColor: "#D9D9D9",
-            height: 44
-          }}
-        />
-      </Form.Item>
+          rules={[
+            {
+              required: true,
+              message: "Please enter an email"
+            },
+            {
+              type: "email",
+              message: "Please enter a valid email"
+            }
+          ]}
+          className="mb-3"
+        >
+          <Input
+            placeholder="Enter user's email"
+            prefix={<MailOutlined className="text-gray-400" />}
+            className="rounded-lg border-gray-200 hover:border-blue-400 focus:border-blue-500 h-10"
+          />
+        </Form.Item>
+      </div>
 
       {/* Role Field */}
       <Form.Item
         name="role"
         label={
-          <Space>
-            <SafetyOutlined style={{ color: "#1976D2" }} />
-            <span style={{ fontWeight: 500 }}>Role</span>
-          </Space>
+          <span className="text-sm font-medium text-gray-700">
+            <SafetyOutlined className="mr-1 text-blue-500" />
+            Role
+          </span>
         }
         initialValue="USER"
         rules={[
@@ -153,114 +147,122 @@ export default function UserForm({
             message: "Please select a role"
           }
         ]}
+        className="mb-4"
       >
         <Select
           options={roleOptions.map(option => ({
             value: option.value,
             label: (
-              <Space>
+              <Space className="gap-2">
                 {option.icon}
-                <span style={{ fontWeight: 500, color: "#2C3E50" }}>
+                <span className="font-medium text-gray-700">
                   {option.label}
                 </span>
               </Space>
             )
           }))}
-          size="large"
           placeholder="Select a role"
-          style={{
-            width: "100%",
-            borderRadius: 8
+          className="w-full max-w-[300px] rounded-lg"
+          classNames={{
+            popup: {
+              root: "rounded-lg"
+            }
           }}
-          className="role-select"
         />
       </Form.Item>
 
       {/* Submit Button */}
-      <Form.Item style={{ marginBottom: 0 }}>
+      <Form.Item className="mb-0">
         <Button
           type="primary"
           htmlType="submit"
           loading={loading}
           disabled={loading}
-          size="large"
-          style={{
-            width: "100%",
-            borderRadius: 8,
-            backgroundColor: "#1976D2",
-            fontWeight: 600,
-            fontSize: 15,
-            height: 44,
-            border: "none",
-            transition: "all 0.3s ease"
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#1565C0";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#1976D2";
-          }}
+          className="rounded-lg font-medium text-sm h-10 px-6 bg-blue-600 hover:bg-blue-700 border-none min-w-[160px]"
         >
           {loading ? "Creating User..." : "Create User"}
         </Button>
       </Form.Item>
 
-      {/* Styles */}
       <style jsx>{`
         :global(.user-form .ant-form-item-label > label) {
           font-weight: 500;
-          color: #2C3E50;
+          color: #374151;
         }
         :global(.user-form .ant-input) {
           border-radius: 8px;
-          border-color: #D9D9D9;
+          border-color: #E5E7EB;
+          height: 40px;
+          transition: all 0.2s;
         }
         :global(.user-form .ant-input:hover) {
-          border-color: #1976D2;
+          border-color: #60A5FA;
         }
         :global(.user-form .ant-input:focus) {
-          border-color: #1976D2;
-          box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+          border-color: #3B82F6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
         :global(.user-form .ant-input-affix-wrapper) {
           border-radius: 8px;
-          border-color: #D9D9D9;
+          border-color: #E5E7EB;
+          height: 40px;
+          transition: all 0.2s;
         }
         :global(.user-form .ant-input-affix-wrapper:hover) {
-          border-color: #1976D2;
+          border-color: #60A5FA;
         }
         :global(.user-form .ant-input-affix-wrapper:focus) {
-          border-color: #1976D2;
-          box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+          border-color: #3B82F6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
-        :global(.user-form .role-select .ant-select-selector) {
+        :global(.user-form .ant-input-affix-wrapper .ant-input) {
+          height: 38px;
+        }
+        :global(.user-form .ant-select-selector) {
           border-radius: 8px !important;
-          border-color: #D9D9D9 !important;
-          height: 44px !important;
-          padding: 0 12px !important;
+          border-color: #E5E7EB !important;
+          height: 40px !important;
+          transition: all 0.2s !important;
         }
-        :global(.user-form .role-select .ant-select-selector:hover) {
-          border-color: #1976D2 !important;
+        :global(.user-form .ant-select-selector:hover) {
+          border-color: #60A5FA !important;
         }
-        :global(.user-form .role-select .ant-select-focused .ant-select-selector) {
-          border-color: #1976D2 !important;
-          box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2) !important;
+        :global(.user-form .ant-select-focused .ant-select-selector) {
+          border-color: #3B82F6 !important;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
         }
-        :global(.user-form .role-select .ant-select-selection-item) {
+        :global(.user-form .ant-select-selection-item) {
           display: flex !important;
           align-items: center !important;
         }
-        :global(.user-form .role-select .ant-select-dropdown) {
+        :global(.user-form .ant-select-dropdown) {
           border-radius: 8px !important;
         }
-        :global(.user-form .role-select .ant-select-item) {
+        :global(.user-form .ant-select-item) {
           border-radius: 6px !important;
         }
-        :global(.user-form .role-select .ant-select-item:hover) {
-          background-color: #E3F2FD !important;
+        :global(.user-form .ant-select-item:hover) {
+          background-color: #EFF6FF !important;
         }
-        :global(.user-form .role-select .ant-select-item-option-selected) {
-          background-color: #E3F2FD !important;
+        :global(.user-form .ant-select-item-option-selected) {
+          background-color: #DBEAFE !important;
+        }
+        :global(.user-form .ant-btn-primary) {
+          background-color: #2563EB;
+        }
+        :global(.user-form .ant-btn-primary:hover) {
+          background-color: #1D4ED8 !important;
+        }
+        @media (max-width: 768px) {
+          :global(.user-form .ant-input) {
+            height: 38px;
+          }
+          :global(.user-form .ant-input-affix-wrapper) {
+            height: 38px;
+          }
+          :global(.user-form .ant-select-selector) {
+            height: 38px !important;
+          }
         }
       `}</style>
     </Form>

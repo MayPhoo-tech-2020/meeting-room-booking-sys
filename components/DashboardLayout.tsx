@@ -96,11 +96,11 @@ export default function DashboardLayout({
   const getRoleColor = (role: string) => {
     switch (role) {
       case "ADMIN":
-        return "#E74C3C";
+        return "#E74C3C"; // Red
       case "OWNER":
-        return "#2ECC71";
+        return "#F39C12"; // Yellow/Orange
       case "USER":
-        return "#3498DB";
+        return "#3498DB"; // Blue
       default:
         return "#95A5A6";
     }
@@ -111,7 +111,7 @@ export default function DashboardLayout({
       case "ADMIN":
         return "#FDE8E8";
       case "OWNER":
-        return "#E8F8F0";
+        return "#FFFBF5";
       case "USER":
         return "#E8F4FD";
       default:

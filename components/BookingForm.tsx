@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, DatePicker, Form, Card, Space, Alert } from "antd";
+import { Button, DatePicker, Form, Space, Alert } from "antd";
 import { CalendarOutlined, ClockCircleOutlined, UserOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
@@ -65,12 +65,6 @@ export default function BookingForm({
     return current && current < dayjs().startOf("day");
   };
 
-  const disabledEndDate = (current: dayjs.Dayjs) => {
-    const start = form.getFieldValue("startTime");
-    if (!start) return false;
-    return current && current < dayjs(start);
-  };
-
   return (
     <Form
       form={form}
@@ -90,172 +84,150 @@ export default function BookingForm({
         />
       )}
 
-      {/* Created By - User Info Card */}
-      <Form.Item label="Created By">
-        <Card
-          size="small"
-          style={{
-            backgroundColor: "#F5F9FF",
-            borderColor: "#E3F2FD",
-            borderRadius: 8,
-            borderWidth: 2
-          }}
-          bodyStyle={{ padding: "12px 16px" }}
-        >
-          <Space>
-            <UserOutlined style={{ color: "#1976D2", fontSize: 16 }} />
-            <span style={{ fontWeight: 600, color: "#2C3E50" }}>
-              {currentUser ? currentUser.name : "Loading..."}
+      {/* Created By - User Info */}
+      <div className="flex items-center gap-3 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100 max-w-md">
+        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+          <UserOutlined />
+        </div>
+        <div>
+          <div className="text-sm font-medium text-gray-700">
+            {currentUser ? currentUser.name : "Loading..."}
+          </div>
+          {currentUser && (
+            <span className="text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+              {currentUser.role}
             </span>
-            {currentUser && (
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "#5A6C7D",
-                  backgroundColor: "#E8EDF2",
-                  padding: "2px 10px",
-                  borderRadius: 12,
-                  fontWeight: 500,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px"
-                }}
-              >
-                {currentUser.role}
-              </span>
-            )}
-          </Space>
-        </Card>
-      </Form.Item>
+          )}
+        </div>
+      </div>
 
-      {/* Start Time */}
-      <Form.Item
-        name="startTime"
-        label={
-          <Space>
-            <CalendarOutlined style={{ color: "#1976D2" }} />
-            <span style={{ fontWeight: 500 }}>Start Time</span>
-          </Space>
-        }
-        rules={[
-          {
-            required: true,
-            message: "Please select start time"
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+        {/* Start Time */}
+        <Form.Item
+          name="startTime"
+          label={
+            <span className="text-sm font-medium text-gray-700">
+              <CalendarOutlined className="mr-1 text-blue-500" />
+              Start Time
+            </span>
           }
-        ]}
-      >
-        <DatePicker
-          showTime={{ format: "HH:mm" }}
-          format="YYYY-MM-DD HH:mm"
-          disabledDate={disabledDate}
-          placeholder="Select start date & time"
-          style={{
-            width: "100%",
-            borderRadius: 8,
-            borderColor: "#D9D9D9",
-            height: 44
-          }}
-          suffixIcon={<ClockCircleOutlined />}
-        />
-      </Form.Item>
-
-      {/* End Time */}
-      <Form.Item
-        name="endTime"
-        label={
-          <Space>
-            <CalendarOutlined style={{ color: "#1976D2" }} />
-            <span style={{ fontWeight: 500 }}>End Time</span>
-          </Space>
-        }
-        dependencies={["startTime"]}
-        rules={[
-          {
-            required: true,
-            message: "Please select end time"
-          },
-          ({ getFieldValue }) => ({
-            validator(_, value) {
-              const start = getFieldValue("startTime");
-
-              if (!start || !value) {
-                return Promise.resolve();
-              }
-
-              if (dayjs(value).isAfter(dayjs(start))) {
-                return Promise.resolve();
-              }
-
-              return Promise.reject(
-                new Error("End time must be after start time")
-              );
+          rules={[
+            {
+              required: true,
+              message: "Please select start time"
             }
-          })
-        ]}
-      >
-        <DatePicker
-          showTime={{ format: "HH:mm" }}
-          format="YYYY-MM-DD HH:mm"
-          placeholder="Select end date & time"
-          style={{
-            width: "100%",
-            borderRadius: 8,
-            borderColor: "#D9D9D9",
-            height: 44
-          }}
-          suffixIcon={<ClockCircleOutlined />}
-        />
-      </Form.Item>
+          ]}
+          className="mb-3"
+        >
+          <DatePicker
+            showTime={{ format: "HH:mm" }}
+            format="YYYY-MM-DD HH:mm"
+            disabledDate={disabledDate}
+            placeholder="Select start time"
+            className="w-full rounded-lg border-gray-200 hover:border-blue-400 focus:border-blue-500 h-10"
+            suffixIcon={<ClockCircleOutlined className="text-gray-400" />}
+          />
+        </Form.Item>
+
+        {/* End Time */}
+        <Form.Item
+          name="endTime"
+          label={
+            <span className="text-sm font-medium text-gray-700">
+              <CalendarOutlined className="mr-1 text-blue-500" />
+              End Time
+            </span>
+          }
+          dependencies={["startTime"]}
+          rules={[
+            {
+              required: true,
+              message: "Please select end time"
+            },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                const start = getFieldValue("startTime");
+
+                if (!start || !value) {
+                  return Promise.resolve();
+                }
+
+                if (dayjs(value).isAfter(dayjs(start))) {
+                  return Promise.resolve();
+                }
+
+                return Promise.reject(
+                  new Error("End time must be after start time")
+                );
+              }
+            })
+          ]}
+          className="mb-4"
+        >
+          <DatePicker
+            showTime={{ format: "HH:mm" }}
+            format="YYYY-MM-DD HH:mm"
+            placeholder="Select end time"
+            className="w-full rounded-lg border-gray-200 hover:border-blue-400 focus:border-blue-500 h-10"
+            suffixIcon={<ClockCircleOutlined className="text-gray-400" />}
+          />
+        </Form.Item>
+      </div>
 
       {/* Submit Button */}
-      <Form.Item style={{ marginBottom: 0 }}>
+      <Form.Item className="mb-0">
         <Button
           type="primary"
           htmlType="submit"
           loading={loading}
           disabled={loading}
-          style={{
-            width: "100%",
-            height: 44,
-            borderRadius: 8,
-            backgroundColor: "#1976D2",
-            fontWeight: 600,
-            fontSize: 15,
-            border: "none",
-            transition: "all 0.3s ease"
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#1565C0";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#1976D2";
-          }}
+          className="rounded-lg font-medium text-sm h-10 px-6 bg-blue-600 hover:bg-blue-700 border-none min-w-[160px]"
         >
           {loading ? "Creating Booking..." : "Create Booking"}
         </Button>
       </Form.Item>
 
-      {/* Styles */}
       <style jsx>{`
         :global(.booking-form .ant-form-item-label > label) {
           font-weight: 500;
-          color: #2C3E50;
+          color: #374151;
         }
         :global(.booking-form .ant-picker) {
           border-radius: 8px;
-          border-color: #D9D9D9;
+          border-color: #E5E7EB;
+          height: 40px;
+          width: 100%;
+          transition: all 0.2s;
         }
         :global(.booking-form .ant-picker:hover) {
-          border-color: #1976D2;
+          border-color: #60A5FA;
         }
         :global(.booking-form .ant-picker-focused) {
-          border-color: #1976D2;
-          box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+          border-color: #3B82F6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
         :global(.booking-form .ant-picker-input > input) {
           font-size: 14px;
         }
         :global(.booking-form .ant-picker-input > input::placeholder) {
-          color: #B0B8C4;
+          color: #9CA3AF;
+        }
+        :global(.booking-form .ant-picker-suffix) {
+          color: #9CA3AF;
+        }
+        :global(.booking-form .ant-alert) {
+          border-radius: 8px;
+        }
+        :global(.booking-form .ant-btn-primary) {
+          background-color: #2563EB;
+        }
+        :global(.booking-form .ant-btn-primary:hover) {
+          background-color: #1D4ED8 !important;
+        }
+        @media (max-width: 768px) {
+          :global(.booking-form .ant-picker) {
+            height: 38px;
+          }
         }
       `}</style>
     </Form>
