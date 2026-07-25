@@ -1,3 +1,5 @@
+// app/api/users/[id]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient, Role } from "@prisma/client";
 
@@ -14,10 +16,8 @@ export async function GET(
 
   try {
 
-
     const { id } =
       await context.params;
-
 
 
     const user =
@@ -32,8 +32,6 @@ export async function GET(
         },
 
       });
-
-
 
 
 
@@ -56,8 +54,6 @@ export async function GET(
 
 
 
-
-
     return NextResponse.json({
 
       success:true,
@@ -68,9 +64,7 @@ export async function GET(
 
 
 
-
   } catch(error){
-
 
     return NextResponse.json(
 
@@ -85,13 +79,9 @@ export async function GET(
 
     );
 
-
   }
 
 }
-
-
-
 
 
 
@@ -108,17 +98,20 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
 
-
   try {
 
 
-    const adminRole =
+    const currentRole =
       req.headers.get("x-user-role");
 
 
+    const currentUserId =
+      req.headers.get("x-user-id");
 
-    if(adminRole !== "ADMIN"){
 
+
+
+    if(currentRole !== "ADMIN"){
 
       return NextResponse.json(
 
@@ -133,10 +126,7 @@ export async function PATCH(
 
       );
 
-
     }
-
-
 
 
 
@@ -156,12 +146,10 @@ export async function PATCH(
 
 
 
-
     if(
       !role ||
       !Object.values(Role).includes(role)
     ){
-
 
       return NextResponse.json(
 
@@ -176,12 +164,7 @@ export async function PATCH(
 
       );
 
-
     }
-
-
-
-
 
 
 
@@ -202,9 +185,6 @@ export async function PATCH(
 
 
 
-
-
-
     return NextResponse.json({
 
       success:true,
@@ -212,9 +192,6 @@ export async function PATCH(
       data:user,
 
     });
-
-
-
 
 
 
@@ -234,14 +211,9 @@ export async function PATCH(
 
     );
 
-
   }
 
 }
-
-
-
-
 
 
 
@@ -257,11 +229,10 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
 
-
   try {
 
 
-    const adminRole =
+    const currentRole =
       req.headers.get("x-user-role");
 
 
@@ -271,9 +242,7 @@ export async function DELETE(
 
 
 
-
-    if(adminRole !== "ADMIN"){
-
+    if(currentRole !== "ADMIN"){
 
       return NextResponse.json(
 
@@ -288,12 +257,7 @@ export async function DELETE(
 
       );
 
-
     }
-
-
-
-
 
 
 
@@ -304,12 +268,8 @@ export async function DELETE(
 
 
 
-
-
-
-    // Prevent deleting currently logged-in admin
+    // Prevent deleting current logged-in user
     if(currentUserId === id){
-
 
       return NextResponse.json(
 
@@ -324,11 +284,7 @@ export async function DELETE(
 
       );
 
-
     }
-
-
-
 
 
 
@@ -345,11 +301,7 @@ export async function DELETE(
 
 
 
-
-
-
     if(!user){
-
 
       return NextResponse.json(
 
@@ -364,26 +316,12 @@ export async function DELETE(
 
       );
 
-
     }
 
 
 
 
-
-
-
-
-    /*
-      Delete behavior:
-
-      When a user is deleted,
-      all bookings created by that user
-      will also be deleted.
-    */
-
-
-
+    // Delete related bookings first
     await prisma.booking.deleteMany({
 
       where:{
@@ -391,8 +329,6 @@ export async function DELETE(
       },
 
     });
-
-
 
 
 
@@ -410,18 +346,14 @@ export async function DELETE(
 
 
 
-
-
-
     return NextResponse.json({
 
       success:true,
 
       message:
-        "User deleted successfully. Related bookings were also removed.",
+        "User deleted successfully",
 
     });
-
 
 
 
@@ -442,7 +374,6 @@ export async function DELETE(
       }
 
     );
-
 
   }
 
