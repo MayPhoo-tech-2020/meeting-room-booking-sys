@@ -23,46 +23,6 @@ const roleOptions = [
   { value: "USER", label: "User" }
 ];
 
-// ✅ Helper function for user-friendly error messages
-const getUserFriendlyErrorMessage = (err: any): string => {
-  const errorData = err?.response?.data;
-  const errorMessage = errorData?.error || errorData?.message || err?.message || "";
-  const status = err?.response?.status;
-
-  // User deletion errors
-  if (errorMessage.toLowerCase().includes("not found")) {
-    return "🔍 This user has already been deleted or doesn't exist.";
-  }
-
-  if (errorMessage.toLowerCase().includes("permission") || errorMessage.toLowerCase().includes("authorized")) {
-    return "🔒 You don't have permission to delete this user.";
-  }
-
-  if (errorMessage.toLowerCase().includes("last admin")) {
-    return "⚠️ Cannot delete the last admin user. Please promote another user to admin first.";
-  }
-
-  if (errorMessage.toLowerCase().includes("your own")) {
-    return "⚠️ You cannot delete your own account.";
-  }
-
-  // Role change errors
-  if (errorMessage.toLowerCase().includes("role") && errorMessage.toLowerCase().includes("not found")) {
-    return "🔍 User not found. Please refresh and try again.";
-  }
-
-  // Status code based messages
-  if (status === 400) return "⚠️ Please check your input and try again.";
-  if (status === 401) return "🔒 Please login to continue.";
-  if (status === 403) return "🔒 You don't have permission to do this.";
-  if (status === 404) return "🔍 The user you're looking for could not be found.";
-  if (status === 409) return "⚠️ This action conflicts with existing data.";
-  if (status === 500) return "❌ Something went wrong on our end. Please try again later.";
-
-  // Default fallback
-  return "❌ Something went wrong. Please try again or contact support if the issue persists.";
-};
-
 export default function UserTable({
   users,
   loading = false,
@@ -139,19 +99,19 @@ export default function UserTable({
         setDeletingId(id);
         try {
           await onDelete(id);
-          // ✅ Success notification
-          notification.success({
-            message: "✅ User Deleted",
-            description: hasBookings 
-              ? `${userName} has been deleted along with ${bookingCount} booking${bookingCount !== 1 ? "s" : ""}.`
-              : `${userName} has been successfully deleted.`,
-          });
+          // ✅ REMOVED: Let parent component handle success notification
+          // notification.success({
+          //   message: "✅ User Deleted",
+          //   description: hasBookings 
+          //     ? `${userName} has been deleted along with ${bookingCount} booking${bookingCount !== 1 ? "s" : ""}.`
+          //     : `${userName} has been successfully deleted.`,
+          // });
         } catch (err: any) {
-          // ✅ User-friendly error notification
-          notification.error({
-            message: "❌ Delete Failed",
-            description: getUserFriendlyErrorMessage(err),
-          });
+          // ✅ REMOVED: Let parent component handle error notification
+          // notification.error({
+          //   message: "❌ Delete Failed",
+          //   description: getUserFriendlyErrorMessage(err),
+          // });
         } finally {
           setDeletingId(null);
         }
@@ -167,18 +127,9 @@ export default function UserTable({
     setChangingRoleId(id);
     try {
       await onRoleChange(id, role);
-      // ✅ Success notification - REMOVED to avoid duplicate
-      // The parent component will handle the notification
-      // notification.success({
-      //   message: "✅ Role Updated",
-      //   description: `User role has been successfully changed to ${role}.`,
-      // });
+      // ✅ REMOVED: Let parent component handle success notification
     } catch (err: any) {
-      // ✅ User-friendly error notification for role change
-      notification.error({
-        message: "❌ Role Update Failed",
-        description: getUserFriendlyErrorMessage(err),
-      });
+      // ✅ REMOVED: Let parent component handle error notification
     } finally {
       setChangingRoleId(null);
     }
